@@ -1,8 +1,11 @@
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_async_session
 from app.schemas import MenuModel, CreateEditMenuModel
 from app.models import Menu
@@ -39,13 +42,15 @@ async def get_menus(session: AsyncSession = Depends(get_async_session)):
 
 
 @router.get("/{menu_id}")
-async def get_menu(menu_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+async def get_menu(menu_id: uuid.UUID,
+                   session: AsyncSession = Depends(get_async_session)):
     menu = await get_menu_from_db(session, menu_id)
     return convert_menu(menu)
 
 
 @router.post("/", status_code=201)
-async def create_menu(menu_data: CreateEditMenuModel, session: AsyncSession = Depends(get_async_session)):
+async def create_menu(menu_data: CreateEditMenuModel,
+                      session: AsyncSession = Depends(get_async_session)):
     new_menu = Menu(**menu_data.model_dump(), id=uuid.uuid4())
     session.add(new_menu)
     await session.commit()
@@ -58,33 +63,14 @@ async def create_menu(menu_data: CreateEditMenuModel, session: AsyncSession = De
 async def update_menu(menu_id: uuid.UUID,
                       menu_data: CreateEditMenuModel,
                       session: AsyncSession = Depends(get_async_session)):
-    query = (update(Menu).where(Menu.id == menu_id)
+    query = (update(Menu)
+             .where(Menu.id == menu_id)
              .values(**menu_data.model_dump()))
     await session.execute(query)
     await session.commit()
 
     menu = await get_menu_from_db(session, menu_id)
-    if menu is None:
-        raise HTTPException(status_code=404, detail="menu not found")
-
     return convert_menu(menu)
-
-
-# @router.patch("/{menu_id}")
-# async def update_menu(menu_id: uuid.UUID,
-#                       menu_data: CreateEditMenuModel,
-#                       session: AsyncSession = Depends(get_async_session)):
-#     query = (update(Menu).where(Menu.id == menu_id)
-#              .values(**menu_data.model_dump()))
-#     print(query)
-#     print(type(query))
-#     result = await session.execute(query)
-#     menu = result.scalars().one_or_none()
-#     if menu is None:
-#         raise HTTPException(status_code=404, detail="menu not found")
-#     await session.commit()
-#     menu = await get_menu_from_db(session, menu_id)
-#     return convert_menu(menu)
 
 
 @router.delete("/{menu_id}")

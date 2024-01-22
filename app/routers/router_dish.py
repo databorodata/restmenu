@@ -1,7 +1,10 @@
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_async_session
 from app.schemas import DishModel, CreateEditDishModel
 from app.models import Dish
@@ -9,11 +12,16 @@ from app.models import Dish
 router = APIRouter(prefix="/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes", tags=["dish"])
 
 
+def convert_dish(dish):
+    return DishModel.model_validate(dish, from_attributes=True).model_dump()
+
+
 async def get_dish_from_db(session,
                            menu_id: uuid.UUID,
                            submenu_id: uuid.UUID,
                            dish_id: uuid.UUID):
-    query = (select(Dish).filter(Dish.submenu_id == submenu_id,
+    query = (select(Dish)
+             .filter(Dish.submenu_id == submenu_id,
                                  Dish.menu_id == menu_id,
                                  Dish.id == dish_id))
     result = await session.execute(query)
@@ -31,16 +39,16 @@ def validate_price(price: str) -> str:
     return "{:.2f}".format(price_float)
 
 
-
 @router.get("/")
 async def get_dishes(menu_id: uuid.UUID,
                      submenu_id: uuid.UUID,
                      session: AsyncSession = Depends(get_async_session)):
     query = (select(Dish)
-             .filter(Dish.menu_id == menu_id, Dish.submenu_id == submenu_id))
+             .filter(Dish.menu_id == menu_id,
+                     Dish.submenu_id == submenu_id))
     result = await session.execute(query)
     dishes = result.scalars().all()
-    return [DishModel.model_validate(dish, from_attributes=True).model_dump() for dish in dishes]
+    return [convert_dish(dish) for dish in dishes]
 
 
 @router.get("/{dish_id}")
@@ -49,8 +57,7 @@ async def get_dish(menu_id: uuid.UUID,
                    dish_id: uuid.UUID,
                    session: AsyncSession = Depends(get_async_session)):
     dish = await get_dish_from_db(session, menu_id, submenu_id, dish_id)
-    dish_dict = DishModel.model_validate(dish, from_attributes=True).model_dump()
-    return dish_dict
+    return convert_dish(dish)
 
 
 @router.post("/", status_code=201)
@@ -65,8 +72,7 @@ async def create_dish(menu_id: uuid.UUID,
                     id=uuid.uuid4())
     session.add(new_dish)
     await session.commit()
-    result = DishModel.model_validate(new_dish, from_attributes=True).model_dump()
-    return result
+    return convert_dish(new_dish)
 
 
 @router.patch("/{dish_id}")
@@ -85,10 +91,7 @@ async def update_dish(menu_id: uuid.UUID,
     await session.commit()
 
     dish = await get_dish_from_db(session, menu_id, submenu_id, dish_id)
-    if dish is None:
-        raise HTTPException(status_code=404, detail="dish not found")
-    result = DishModel.model_validate(dish, from_attributes=True).model_dump()
-    return result
+    return convert_dish(dish)
 
 
 @router.delete("/{dish_id}")

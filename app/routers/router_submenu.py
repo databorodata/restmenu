@@ -1,8 +1,11 @@
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_async_session
 from app.schemas import SubmenuModel, CreateEditSubmenuModel
 from app.models import Submenu
@@ -19,7 +22,8 @@ def convert_submenu(submenu):
 async def get_submenu_from_db(session, menu_id: uuid.UUID, submenu_id: uuid.UUID):
     query = (select(Submenu)
              .options(selectinload(Submenu.dishes))
-             .filter(Submenu.id == submenu_id, Submenu.menu_id == menu_id))
+             .filter(Submenu.id == submenu_id,
+                     Submenu.menu_id == menu_id))
     result = await session.execute(query)
     submenu = result.scalars().one_or_none()
     if submenu is None:
@@ -74,11 +78,7 @@ async def update_submenu(menu_id: uuid.UUID,
     await session.commit()
 
     submenu = await get_submenu_from_db(session, menu_id, submenu_id)
-    if submenu is None:
-        raise HTTPException(status_code=404, detail="submenu not found")
-
     return convert_submenu(submenu)
-
 
 
 @router.delete("/{submenu_id}")

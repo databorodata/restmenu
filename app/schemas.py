@@ -1,4 +1,5 @@
 import uuid
+
 from pydantic import BaseModel
 
 
@@ -7,9 +8,17 @@ class CreateEditMenuModel(BaseModel):
     description: str
 
 
+class MenuModel(CreateEditMenuModel):
+    id: uuid.UUID
+
+
 class CreateEditSubmenuModel(BaseModel):
     title: str
     description: str
+
+
+class SubmenuModel(CreateEditSubmenuModel):
+    id: uuid.UUID
 
 
 class CreateEditDishModel(BaseModel):
@@ -18,20 +27,5 @@ class CreateEditDishModel(BaseModel):
     price: str
 
 
-class MenuModel(BaseModel):
+class DishModel(CreateEditDishModel):
     id: uuid.UUID
-    title: str
-    description: str
-
-
-class SubmenuModel(BaseModel):
-    id: uuid.UUID
-    title: str
-    description: str
-
-
-class DishModel(BaseModel):
-    id: uuid.UUID
-    title: str
-    description: str
-    price: str
