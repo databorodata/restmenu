@@ -10,20 +10,6 @@ from app.models import Menu
 router = APIRouter(prefix="/api/v1/menus", tags=["menu"])
 
 
-# @router.get("/")
-# async def get_menus(session: AsyncSession = Depends(get_async_session)):
-#     query = (select(Menu,
-#                     func.count(Submenu.id).label("submenus_count"),
-#                     func.count(Dish.id).label("dishes_count"))
-#              .select_from(Menu)
-#              .join(Submenu, Menu.id == Submenu.menu_id, isouter=True)
-#              .join(Dish, Submenu.id == Dish.submenu_id, isouter=True)
-#              .group_by(Menu.id))
-#     result = await session.execute(query)
-#     result_orm = result.scalars().all()
-#     result_dto = [MenuModel.model_validate(row, from_attributes=True) for row in result_orm]
-#     return result_dto
-
 def convert_menu(menu):
     menu_dict = MenuModel.model_validate(menu, from_attributes=True).model_dump()
     menu_dict.update({"submenus_count": len(menu.submenus), "dishes_count": len(menu.dishes)})

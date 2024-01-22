@@ -1,5 +1,5 @@
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class CreateEditMenuModel(BaseModel):
@@ -15,26 +15,23 @@ class CreateEditSubmenuModel(BaseModel):
 class CreateEditDishModel(BaseModel):
     title: str
     description: str
+    price: str
 
 
 class MenuModel(BaseModel):
-    id: uuid.UUID  # = Field(default_factory=uuid.uuid4, alias="id")
+    id: uuid.UUID
     title: str
     description: str
 
 
 class SubmenuModel(BaseModel):
-    id: uuid.UUID # = Field(default_factory=uuid.uuid4, alias="id")
+    id: uuid.UUID
     title: str
     description: str
-    #api_test_menu_id: uuid.UUID
 
 
 class DishModel(BaseModel):
-    id: uuid.UUID # = Field(default_factory=uuid.uuid4, alias="id")
+    id: uuid.UUID
     title: str
     description: str
-    price: float
-    # api_test_submenu_id: uuid.UUID
-
-
+    price: str

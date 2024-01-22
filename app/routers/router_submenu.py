@@ -4,8 +4,8 @@ from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_async_session
-from app.schemas import SubmenuModel, MenuModel, CreateEditSubmenuModel
-from app.models import Submenu, Dish, Menu
+from app.schemas import SubmenuModel, CreateEditSubmenuModel
+from app.models import Submenu
 
 router = APIRouter(prefix="/api/v1/menus/{menu_id}/submenus", tags=["submenu"])
 
@@ -17,7 +17,9 @@ def convert_submenu(submenu):
 
 
 async def get_submenu_from_db(session, menu_id: uuid.UUID, submenu_id: uuid.UUID):
-    query = (select(Submenu).options(selectinload(Submenu.dishes)).filter(Submenu.id == submenu_id, Menu.id == menu_id))
+    query = (select(Submenu)
+             .options(selectinload(Submenu.dishes))
+             .filter(Submenu.id == submenu_id, Submenu.menu_id == menu_id))
     result = await session.execute(query)
     submenu = result.scalars().one_or_none()
     if submenu is None:
@@ -29,7 +31,9 @@ async def get_submenu_from_db(session, menu_id: uuid.UUID, submenu_id: uuid.UUID
 @router.get("/")
 async def get_submenus(menu_id: uuid.UUID,
                        session: AsyncSession = Depends(get_async_session)):
-    query = (select(Submenu).options(selectinload(Submenu.dishes)).filter(Submenu.menu_id == menu_id))
+    query = (select(Submenu)
+             .options(selectinload(Submenu.dishes))
+             .filter(Submenu.menu_id == menu_id))
     result = await session.execute(query)
     submenus = result.scalars().all()
     return [convert_submenu(submenu) for submenu in submenus]
@@ -89,4 +93,3 @@ async def delete_submenu(menu_id: uuid.UUID,
         raise HTTPException(status_code=404, detail="submenu not found")
     await session.commit()
     return {"detail": "submenu deleted"}
-
