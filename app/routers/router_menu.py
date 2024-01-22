@@ -17,7 +17,10 @@ def convert_menu(menu):
 
 
 async def get_menu_from_db(session, menu_id: uuid.UUID):
-    query = (select(Menu).options(selectinload(Menu.submenus), selectinload(Menu.dishes)).filter(Menu.id == menu_id))
+    query = (select(Menu)
+             .options(selectinload(Menu.submenus),
+                                  selectinload(Menu.dishes))
+             .filter(Menu.id == menu_id))
     result = await session.execute(query)
     menu = result.scalars().one_or_none()
     if menu is None:
@@ -27,7 +30,9 @@ async def get_menu_from_db(session, menu_id: uuid.UUID):
 
 @router.get("/")
 async def get_menus(session: AsyncSession = Depends(get_async_session)):
-    query = (select(Menu).options(selectinload(Menu.submenus), selectinload(Menu.dishes)))
+    query = (select(Menu)
+             .options(selectinload(Menu.submenus),
+                      selectinload(Menu.dishes)))
     result = await session.execute(query)
     menus = result.scalars().all()
     return [convert_menu(menu) for menu in menus]
@@ -54,15 +59,32 @@ async def update_menu(menu_id: uuid.UUID,
                       menu_data: CreateEditMenuModel,
                       session: AsyncSession = Depends(get_async_session)):
     query = (update(Menu).where(Menu.id == menu_id)
-             .values(**menu_data.model_dump())
-             .returning(Menu))
-    result = await session.execute(query)
-    menu = result.scalars().one_or_none()
+             .values(**menu_data.model_dump()))
+    await session.execute(query)
+    await session.commit()
+
+    menu = await get_menu_from_db(session, menu_id)
     if menu is None:
         raise HTTPException(status_code=404, detail="menu not found")
-    await session.commit()
-    menu = await get_menu_from_db(session, menu_id)
+
     return convert_menu(menu)
+
+
+# @router.patch("/{menu_id}")
+# async def update_menu(menu_id: uuid.UUID,
+#                       menu_data: CreateEditMenuModel,
+#                       session: AsyncSession = Depends(get_async_session)):
+#     query = (update(Menu).where(Menu.id == menu_id)
+#              .values(**menu_data.model_dump()))
+#     print(query)
+#     print(type(query))
+#     result = await session.execute(query)
+#     menu = result.scalars().one_or_none()
+#     if menu is None:
+#         raise HTTPException(status_code=404, detail="menu not found")
+#     await session.commit()
+#     menu = await get_menu_from_db(session, menu_id)
+#     return convert_menu(menu)
 
 
 @router.delete("/{menu_id}")

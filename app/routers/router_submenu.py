@@ -69,14 +69,14 @@ async def update_submenu(menu_id: uuid.UUID,
     query = (update(Submenu)
              .where(Submenu.id == submenu_id,
                     Submenu.menu_id == menu_id)
-             .values(**submenu_data.model_dump())
-             .returning(Submenu))
-    result = await session.execute(query)
-    submenu = result.scalars().one_or_none()
+             .values(**submenu_data.model_dump()))
+    await session.execute(query)
+    await session.commit()
+
+    submenu = await get_submenu_from_db(session, menu_id, submenu_id)
     if submenu is None:
         raise HTTPException(status_code=404, detail="submenu not found")
-    await session.commit()
-    submenu = await get_submenu_from_db(session, menu_id, submenu_id)
+
     return convert_submenu(submenu)
 
 
