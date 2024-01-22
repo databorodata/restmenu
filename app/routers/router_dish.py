@@ -27,8 +27,8 @@ async def validate_price(price: str) -> str:
     try:
         price_float = float(price)
     except ValueError:
-        return 'price type is not correct'
-    return str(round(price_float, 2))
+        raise HTTPException(status_code=400, detail='price type is not correct')
+    return "{:.2f}".format(price_float)
 
 
 
@@ -58,6 +58,7 @@ async def create_dish(menu_id: uuid.UUID,
                       submenu_id: uuid.UUID,
                       dish_data: CreateEditDishModel,
                       session: AsyncSession = Depends(get_async_session)):
+    dish_data.price = await validate_price(dish_data.price)
     new_dish = Dish(**dish_data.model_dump(),
                     menu_id=menu_id,
                     submenu_id=submenu_id,
@@ -74,6 +75,7 @@ async def update_dish(menu_id: uuid.UUID,
                       dish_id: uuid.UUID,
                       dish_data: CreateEditDishModel,
                       session: AsyncSession = Depends(get_async_session)):
+    dish_data.price = await validate_price(dish_data.price)
     query = (update(Dish)
              .where(Dish.id == dish_id,
                     Dish.submenu_id == submenu_id,
