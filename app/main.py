@@ -15,3 +15,8 @@ async def on_startup():
 app.include_router(router_menu)
 app.include_router(router_submenu)
 app.include_router(router_dish)
+
+
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to the Rest Menu API"}

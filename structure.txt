@@ -1,0 +1,35 @@
+.
+├── app
+│   ├── database.py
+│   ├── main.py
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── database.cpython-310.pyc
+│   │   ├── main.cpython-310.pyc
+│   │   ├── models.cpython-310.pyc
+│   │   └── schemas.cpython-310.pyc
+│   ├── routers
+│   │   ├── __pycache__
+│   │   │   ├── router_dish.cpython-310.pyc
+│   │   │   ├── router_menu.cpython-310.pyc
+│   │   │   └── router_submenu.cpython-310.pyc
+│   │   ├── router_dish.py
+│   │   ├── router_menu.py
+│   │   └── router_submenu.py
+│   └── schemas.py
+├── config.py
+├── data
+│   ├── menu app.postman_collection.json
+│   └── menu app.postman_environment.json
+├── __pycache__
+│   └── config.cpython-310.pyc
+├── README.md
+├── requirements.txt
+├── run.py
+├── start.sh
+└── structure.txt
+
+6 directories, 23 files
+
+tree -I 'data | __pycache__ | .git | .idea | .venv' > structure.txt
+

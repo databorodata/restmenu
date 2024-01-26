@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=localhost
+      - DB_NAME=restmenu
+      - DB_USER=databorodata
+      - DB_PASS=210243
+      - DB_PORT=5432
+
+  db:
+    image: postgres:15.1-alpine
+    environment:
+      - POSTGRES_DB=restmenu
+      - POSTGRES_USER=databorodata
+      - POSTGRES_PASSWORD=210243
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
