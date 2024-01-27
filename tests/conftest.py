@@ -18,7 +18,6 @@ engine = create_async_engine(TEST_DB_URL, poolclass=NullPool)
 
 @pytest.fixture(scope="session")
 def event_loop():
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! LOOP")
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
     yield loop
@@ -27,8 +26,6 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="session")
 async def init_db():
-    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ DB")
-    print(TEST_DB_URL)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
