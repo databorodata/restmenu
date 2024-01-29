@@ -22,41 +22,6 @@ def convert_menu(menu):
     return menu_dict
 
 
-# async def get_menu_from_db(session, menu_id: uuid.UUID):
-#     query = (select(Menu)
-#              .options(selectinload(Menu.submenus),
-#                                   selectinload(Menu.dishes))
-#              .filter(Menu.id == menu_id))
-#     result = await session.execute(query)
-#     menu = result.scalars().one_or_none()
-#     if menu is None:
-#         raise HTTPException(status_code=404, detail="menu not found")
-#     return menu
-
-# async def get_menu_from_db(session, menu_id: uuid.UUID):
-#     # query= (select(Menu).options(
-#     #     joinedload(Menu.submenus).subqueryload(Menu.dishes)
-#     # ).filter(Menu.id == menu_id))
-#
-#     query = (select(Menu)
-#              .options(joinedload(Menu.submenus),
-#                       joinedload(Menu.dishes))
-#              .filter(Menu.id == menu_id))
-#
-#     # query = (select(Menu)
-#     #          .options(selectinload(Menu.submenus),
-#     #                               selectinload(Menu.dishes))
-#     #          .filter(Menu.id == menu_id))
-#     print(query)
-#     result = await session.execute(query)
-#     menu = result.scalars().fetchall()
-#     # menu = result.scalars().one_or_none()
-#     if menu is None:
-#         raise HTTPException(status_code=404, detail="menu not found")
-#     print(menu)
-#     return menu
-
-
 async def get_menu_from_db(session, menu_id: uuid.UUID):
     query = (
         select(Menu)
