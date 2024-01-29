@@ -3,12 +3,15 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 
 from sqlalchemy import select, update, delete
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session
 from app.schemas import MenuModel, CreateEditMenuModel
 from app.models import Menu
+
+from sqlalchemy import func, select
+from app.models import Menu, Submenu, Dish
 
 router = APIRouter(prefix="/api/v1/menus", tags=["menu"])
 
@@ -19,13 +22,51 @@ def convert_menu(menu):
     return menu_dict
 
 
+# async def get_menu_from_db(session, menu_id: uuid.UUID):
+#     query = (select(Menu)
+#              .options(selectinload(Menu.submenus),
+#                                   selectinload(Menu.dishes))
+#              .filter(Menu.id == menu_id))
+#     result = await session.execute(query)
+#     menu = result.scalars().one_or_none()
+#     if menu is None:
+#         raise HTTPException(status_code=404, detail="menu not found")
+#     return menu
+
+# async def get_menu_from_db(session, menu_id: uuid.UUID):
+#     # query= (select(Menu).options(
+#     #     joinedload(Menu.submenus).subqueryload(Menu.dishes)
+#     # ).filter(Menu.id == menu_id))
+#
+#     query = (select(Menu)
+#              .options(joinedload(Menu.submenus),
+#                       joinedload(Menu.dishes))
+#              .filter(Menu.id == menu_id))
+#
+#     # query = (select(Menu)
+#     #          .options(selectinload(Menu.submenus),
+#     #                               selectinload(Menu.dishes))
+#     #          .filter(Menu.id == menu_id))
+#     print(query)
+#     result = await session.execute(query)
+#     menu = result.scalars().fetchall()
+#     # menu = result.scalars().one_or_none()
+#     if menu is None:
+#         raise HTTPException(status_code=404, detail="menu not found")
+#     print(menu)
+#     return menu
+
+
 async def get_menu_from_db(session, menu_id: uuid.UUID):
-    query = (select(Menu)
-             .options(selectinload(Menu.submenus),
-                                  selectinload(Menu.dishes))
-             .filter(Menu.id == menu_id))
+    query = (
+        select(Menu)
+        .options(joinedload(Menu.submenus), joinedload(Menu.dishes))
+        .filter(Menu.id == menu_id)
+    )
+    print(query)
     result = await session.execute(query)
-    menu = result.scalars().one_or_none()
+    menu = result.scalars().unique().one_or_none()
+
     if menu is None:
         raise HTTPException(status_code=404, detail="menu not found")
     return menu
@@ -85,42 +126,3 @@ async def delete_menu(menu_id: uuid.UUID,
     return {"detail": "menu deleted"}
 
 
-from sqlalchemy import func, select
-from app.models import Menu, Submenu, Dish
-
-@router.get("/{menu_id}")
-async def get_menu_details(menu_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    # Создаем запрос для подсчета количества подменю и блюд в каждом меню
-    query = (
-        select(
-            Menu.id,
-            Menu.title,
-            Menu.description,
-            func.count(Submenu.id.distinct()).label('submenus_count'),
-            func.count(Dish.id.distinct()).label('dishes_count')
-        )
-        .select_from(Menu)
-        .outerjoin(Submenu, Submenu.menu_id == Menu.id)
-        .outerjoin(Dish, Dish.submenu_id == Submenu.id)
-        .where(Menu.id == menu_id)
-        .group_by(Menu.id)
-    )
-    print('&&&&&&&&&&&&&')
-    result = await session.execute(query)
-    print(result)
-    menu_details = result.scalars().first()
-
-    if menu_details:
-        print('!!!!!!!!!!!!')
-        print({
-            "id": menu_details.Menu.id,
-            "submenus_count": menu_details.submenus_count,
-            "dishes_count": menu_details.dishes_count
-        })
-        return {
-            "id": menu_details.Menu.id,
-            "submenus_count": menu_details.submenus_count,
-            "dishes_count": menu_details.dishes_count
-        }
-    else:
-        return None

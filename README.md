@@ -42,7 +42,7 @@ Python 3.10, PostgreSQL
    pip install -r requirements.txt
 
 
-5. Создайте файл .env на основе .env_template и заполните необходимые переменные окружения (DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER).
+5. Создайте файл .env на основе .env_template и заполните необходимые переменные окружения (POSTGRES_HOST, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER).
 
 
 6. Запустите проект с помощью скрипта start.sh:
@@ -52,17 +52,36 @@ Python 3.10, PostgreSQL
    ./start.sh
    
 
+## Развёртывание в Docker
+
+### Запуск приложения в Docker
+
+1. Перейдите в директорию проекта:
+
+   ```bash
+   cd /project/path
+
+2. Создайте файл .env на основе .env_template и заполните необходимые переменные окружения ((POSTGRES_HOST, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER)).
+
+3. Чтобы запустить приложение, используйте следующую команду в вашем терминале
+
+   ```bash
+
+   docker-compose up -d
 
 
+### Запуск тестов в Docker
+
+1. Перейдите в директорию проекта:
+
+   ```bash
+   cd /project/path
+
+2. Создайте файл .env.test на основе .env_template и заполните необходимые переменные окружения (DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER).
 
 
+3. Чтобы запустить тест для приложения, используйте следующую команду в вашем терминале
 
-
-
-
-docker-compose -f docker-compose-tests.yml up -d
-docker logs <CONTAINER_NAME>
-docker-compose up -d
-
-
-
+   ```bash
+   
+   docker-compose -f docker-compose-tests.yml up
