@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  test_api:
+    build: .
+    command: pytest
+    depends_on:
+      - test_db
+    restart: on-failure
+    env_file: .env.test
+    environment:
+      - POSTGRES_HOST=test_db
+
+  test_db:
+    image: postgres:15.1-alpine
+    env_file: .env.test
+
+
+
+
+

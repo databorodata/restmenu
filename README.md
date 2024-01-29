@@ -50,3 +50,19 @@ Python 3.10, PostgreSQL
    ```bash
 
    ./start.sh
+   
+
+
+
+
+
+
+
+
+
+docker-compose -f docker-compose-tests.yml up -d
+docker logs <CONTAINER_NAME>
+docker-compose up -d
+
+
+

@@ -83,3 +83,44 @@ async def delete_menu(menu_id: uuid.UUID,
         raise HTTPException(status_code=404, detail="menu not found")
     await session.commit()
     return {"detail": "menu deleted"}
+
+
+from sqlalchemy import func, select
+from app.models import Menu, Submenu, Dish
+
+@router.get("/{menu_id}")
+async def get_menu_details(menu_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    # Создаем запрос для подсчета количества подменю и блюд в каждом меню
+    query = (
+        select(
+            Menu.id,
+            Menu.title,
+            Menu.description,
+            func.count(Submenu.id.distinct()).label('submenus_count'),
+            func.count(Dish.id.distinct()).label('dishes_count')
+        )
+        .select_from(Menu)
+        .outerjoin(Submenu, Submenu.menu_id == Menu.id)
+        .outerjoin(Dish, Dish.submenu_id == Submenu.id)
+        .where(Menu.id == menu_id)
+        .group_by(Menu.id)
+    )
+    print('&&&&&&&&&&&&&')
+    result = await session.execute(query)
+    print(result)
+    menu_details = result.scalars().first()
+
+    if menu_details:
+        print('!!!!!!!!!!!!')
+        print({
+            "id": menu_details.Menu.id,
+            "submenus_count": menu_details.submenus_count,
+            "dishes_count": menu_details.dishes_count
+        })
+        return {
+            "id": menu_details.Menu.id,
+            "submenus_count": menu_details.submenus_count,
+            "dishes_count": menu_details.dishes_count
+        }
+    else:
+        return None
