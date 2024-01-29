@@ -27,7 +27,6 @@ Python 3.10, PostgreSQL
    ```bash
    cd /project/path
 
-
 3. Создайте и активируйте виртуальное окружение:
 
    ```bash
@@ -35,12 +34,10 @@ Python 3.10, PostgreSQL
 
    source venv/bin/activate
 
-
 4. Установите зависимости из файла requirements.txt:
 
    ```bash
    pip install -r requirements.txt
-
 
 5. Создайте файл .env на основе .env_template и заполните необходимые переменные окружения (POSTGRES_HOST, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER).
 
@@ -48,9 +45,7 @@ Python 3.10, PostgreSQL
 6. Запустите проект с помощью скрипта start.sh:
    
    ```bash
-
    ./start.sh
-   
 
 ## Развёртывание в Docker
 
@@ -61,14 +56,12 @@ Python 3.10, PostgreSQL
    ```bash
    cd /project/path
 
-2. Создайте файл .env на основе .env_template и заполните необходимые переменные окружения ((POSTGRES_HOST, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER)).
+2. Создайте файл .env на основе .env_template и заполните необходимые переменные окружения (POSTGRES_HOST, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER).
 
 3. Чтобы запустить приложение, используйте следующую команду в вашем терминале
 
    ```bash
-
    docker-compose up -d
-
 
 ### Запуск тестов в Docker
 
@@ -77,11 +70,25 @@ Python 3.10, PostgreSQL
    ```bash
    cd /project/path
 
-2. Создайте файл .env.test на основе .env_template и заполните необходимые переменные окружения (DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER).
+2. Создайте файл .env.test на основе .env_template и заполните необходимые переменные окружения (POSTGRES_HOST, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER).
 
 
 3. Чтобы запустить тест для приложения, используйте следующую команду в вашем терминале
 
    ```bash
-   
    docker-compose -f docker-compose-tests.yml up
+   ```
+
+### Задание "Реализовать вывод количества подменю и блюд для Меню через один (сложный) ORM запрос."
+
+https://github.com/databorodata/restmenu/blob/pytest_docker/app/routers/router_menu.py#L25
+
+В файле функция get_menu_from_db в которой запрос реализуется через использование joinedload.
+Запрос тождественен SQL выражению:
+
+```sql
+SELECT menu.id, menu.title, menu.description, submenu_1.id AS id_1, submenu_1.title AS title_1, submenu_1.description AS description_1, submenu_1.menu_id, dish_1.id AS id_2, dish_1.title AS title_2, dish_1.description AS description_2, dish_1.price, dish_1.submenu_id, dish_1.menu_id AS menu_id_1 
+
+FROM menu LEFT OUTER JOIN submenu AS submenu_1 ON menu.id = submenu_1.menu_id LEFT OUTER JOIN dish AS dish_1 ON menu.id = dish_1.menu_id 
+
+WHERE menu.id = :id_3
