@@ -81,14 +81,12 @@ Python 3.10, PostgreSQL
 
 ### Задание "Реализовать вывод количества подменю и блюд для Меню через один (сложный) ORM запрос."
 
-https://github.com/databorodata/restmenu/blob/pytest_docker/app/routers/router_menu.py#L25
 
-В файле функция get_menu_from_db в которой запрос реализуется через использование joinedload.
-Запрос тождественен SQL выражению:
+Запрос реализовал в отдельном эндпоинте:
 
-```sql
-SELECT menu.id, menu.title, menu.description, submenu_1.id AS id_1, submenu_1.title AS title_1, submenu_1.description AS description_1, submenu_1.menu_id, dish_1.id AS id_2, dish_1.title AS title_2, dish_1.description AS description_2, dish_1.price, dish_1.submenu_id, dish_1.menu_id AS menu_id_1 
+https://github.com/databorodata/restmenu/blob/pytest_docker/app/routers/complex.py#L16
 
-FROM menu LEFT OUTER JOIN submenu AS submenu_1 ON menu.id = submenu_1.menu_id LEFT OUTER JOIN dish AS dish_1 ON menu.id = dish_1.menu_id 
 
-WHERE menu.id = :id_3
+Так же внедрил запрос для работы эндопоинтов сущности Меню
+
+https://github.com/databorodata/restmenu/blob/pytest_docker/app/routers/router_menu.py#L30
