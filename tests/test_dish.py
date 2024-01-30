@@ -12,17 +12,15 @@ from tests.conftest import client
 class TestDishAPI:
 
     async def test_dish_create(self, db_session: AsyncSession, client: AsyncClient):
-        data_menu = {"title": "Test Menu", "description": "Test Description"}
-        response_menu = await client.post("/api/v1/menus/", json=data_menu)
-
-        data_submenu = {"title": "Test Submenu", "description": "Test Submenu Description"}
-        response_submenu = await client.post(f"/api/v1/menus/{response_menu.json()['id']}/submenus/",
-                                             json=data_submenu)
+        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
+        new_submenu = Submenu(title='submenu 1', description='description 1', id=uuid.uuid4(), menu_id=new_menu.id)
+        db_session.add(new_menu)
+        db_session.add(new_submenu)
+        await db_session.commit()
 
         data_dish = {"title": "Test Dish", "description": "Test Dish Description", "price": "42.42"}
         response_dish = await (client.
-                               post(f"/api/v1/menus/{response_menu.json()['id']}/submenus/{response_submenu.json()['id']}/dishes/",
-                                          json=data_dish))
+                               post(f"/api/v1/menus/{new_menu.id}/submenus/{new_submenu.id}/dishes/", json=data_dish))
 
         query = (select(Dish).filter(Dish.id == response_dish.json()['id']))
         result = await db_session.execute(query)

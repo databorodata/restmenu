@@ -1,12 +1,10 @@
 import uuid
 
-# import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Menu
-# from app.schemas import MenuModel
 from tests.conftest import client, db_session
 
 
@@ -27,8 +25,6 @@ class TestMenuAPI:
         assert response.json()["description"] == menu.description
         assert response.json()['submenus_count'] == 0
         assert response.json()['dishes_count'] == 0
-
-
 
     async def test_get_menu(self, db_session: AsyncSession, client: AsyncClient):
         new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())

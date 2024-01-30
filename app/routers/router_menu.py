@@ -2,34 +2,58 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from sqlalchemy import update, delete
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy import update, delete, func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session
 from app.schemas import MenuModel, CreateEditMenuModel
 
 from sqlalchemy import select
-from app.models import Menu
+from app.models import Menu, Submenu, Dish
 
 router = APIRouter(prefix="/api/v1/menus", tags=["menu"])
 
 
-def convert_menu(menu):
+def convert_menu_with_relations(menu):
     menu_dict = MenuModel.model_validate(menu, from_attributes=True).model_dump()
     menu_dict.update({"submenus_count": len(menu.submenus), "dishes_count": len(menu.dishes)})
     return menu_dict
 
 
+def convert_menu(menu):
+    menu_dict = MenuModel.model_validate(menu, from_attributes=True).model_dump()
+    menu_dict.update({"submenus_count": menu.submenus_count, "dishes_count": menu.dishes_count})
+    return menu_dict
+
+
 async def get_menu_from_db(session, menu_id: uuid.UUID):
-    query = (
-        select(Menu)
-        .options(joinedload(Menu.submenus), joinedload(Menu.dishes))
-        .filter(Menu.id == menu_id)
+    submenus_count_subq = (
+        select(func.count(Submenu.id))
+        .where(Submenu.menu_id == Menu.id)
+        .scalar_subquery()
     )
-    # print(query)
+
+    dishes_count_subq = (
+        select(func.count(Dish.id))
+        .join(Submenu, Submenu.id == Dish.submenu_id)
+        .where(Submenu.menu_id == Menu.id)
+        .scalar_subquery()
+    )
+
+    query = (
+        select(
+            Menu.id,
+            Menu.title,
+            Menu.description,
+            submenus_count_subq.label("submenus_count"),
+            dishes_count_subq.label("dishes_count")
+        )
+        .where(Menu.id == menu_id)
+    )
+
     result = await session.execute(query)
-    menu = result.scalars().unique().one_or_none()
+    menu = result.first()
 
     if menu is None:
         raise HTTPException(status_code=404, detail="menu not found")
@@ -43,7 +67,7 @@ async def get_menus(session: AsyncSession = Depends(get_async_session)):
                       selectinload(Menu.dishes)))
     result = await session.execute(query)
     menus = result.scalars().all()
-    return [convert_menu(menu) for menu in menus]
+    return [convert_menu_with_relations(menu) for menu in menus]
 
 
 @router.get("/{menu_id}")

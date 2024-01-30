@@ -1,6 +1,5 @@
 import uuid
 
-# import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,11 +11,12 @@ from tests.conftest import client
 class TestSubmenuAPI:
 
     async def test_submenu_create(self, db_session: AsyncSession, client: AsyncClient):
-        data_menu = {"title": "Test Menu", "description": "Test Description"}
-        response_menu = await client.post("/api/v1/menus/", json=data_menu)
+        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
+        db_session.add(new_menu)
+        await db_session.commit()
 
         data_submenu = {"title": "Test Submenu", "description": "Test Submenu Description"}
-        response_submenu = await client.post(f"/api/v1/menus/{response_menu.json()['id']}/submenus/", json=data_submenu)
+        response_submenu = await client.post(f"/api/v1/menus/{new_menu.id}/submenus/", json=data_submenu)
 
         query = (select(Submenu).filter(Submenu.id == response_submenu.json()['id']))
         result = await db_session.execute(query)
