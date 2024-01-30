@@ -5,7 +5,8 @@ services:
     build: .
     command: pytest
     depends_on:
-      - test_db
+      test_db:
+        condition: service_healthy
     restart: on-failure
     env_file: .env.test
     environment:
@@ -14,6 +15,11 @@ services:
   test_db:
     image: postgres:15.1-alpine
     env_file: .env.test
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 15s
+      timeout: 40s
+      retries: 4
 
 
 
