@@ -4,6 +4,7 @@ from app.database import create_db_and_tables
 from app.routers.router_dish import router as router_dish
 from app.routers.router_submenu import router as router_submenu
 from app.routers.router_menu import router as router_menu
+from app.routers.complex import router as complex_query
 
 app = FastAPI(title="Rest Menu")
 
@@ -16,6 +17,7 @@ async def on_startup():
 app.include_router(router_menu)
 app.include_router(router_submenu)
 app.include_router(router_dish)
+app.include_router(complex_query)
 
 
 @app.get("/")
