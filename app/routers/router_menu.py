@@ -28,7 +28,7 @@ async def get_menu_from_db(session, menu_id: uuid.UUID):
         .options(joinedload(Menu.submenus), joinedload(Menu.dishes))
         .filter(Menu.id == menu_id)
     )
-    print(query)
+    # print(query)
     result = await session.execute(query)
     menu = result.scalars().unique().one_or_none()
 

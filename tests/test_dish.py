@@ -1,72 +1,98 @@
-import pytest
+import uuid
+
+# import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Dish, Menu, Submenu
 from tests.conftest import client
 
 
 class TestDishAPI:
-    menu_id = None
-    submenu_id = None
-    dish_id = None
 
-    @pytest.fixture(scope="function")
-    async def create_menu_submenu_dish_fixture(self, client: AsyncClient):
+    async def test_dish_create(self, db_session: AsyncSession, client: AsyncClient):
         data_menu = {"title": "Test Menu", "description": "Test Description"}
-        response = await client.post("/api/v1/menus/", json=data_menu)
-        assert response.status_code == 201
-        TestDishAPI.menu_id = response.json()["id"]
+        response_menu = await client.post("/api/v1/menus/", json=data_menu)
 
         data_submenu = {"title": "Test Submenu", "description": "Test Submenu Description"}
-        response = await client.post(f"/api/v1/menus/{TestDishAPI.menu_id}/submenus/", json=data_submenu)
-        assert response.status_code == 201
-        TestDishAPI.submenu_id = response.json()["id"]
+        response_submenu = await client.post(f"/api/v1/menus/{response_menu.json()['id']}/submenus/",
+                                             json=data_submenu)
 
         data_dish = {"title": "Test Dish", "description": "Test Dish Description", "price": "42.42"}
-        response = await (client
-                          .post(f"/api/v1/menus/{TestDishAPI.menu_id}/submenus/{TestDishAPI.submenu_id}/dishes/"
-                                ,json=data_dish))
-        assert response.status_code == 201
-        TestDishAPI.dish_id = response.json()["id"]
-        yield
+        response_dish = await (client.
+                               post(f"/api/v1/menus/{response_menu.json()['id']}/submenus/{response_submenu.json()['id']}/dishes/",
+                                          json=data_dish))
 
-    @pytest.fixture(scope="function")
-    async def delete_menu_submenu_dish_fixture(self, client: AsyncClient):
-        yield
-        await client.delete(f"/api/v1/menus/{TestDishAPI.menu_id}")
-        TestDishAPI.menu_id = None
-        TestDishAPI.submenu_id = None
-        TestDishAPI.dish_id = None
+        query = (select(Dish).filter(Dish.id == response_dish.json()['id']))
+        result = await db_session.execute(query)
+        dish = result.scalars().one_or_none()
 
-    @pytest.mark.usefixtures('create_menu_submenu_dish_fixture', 'delete_menu_submenu_dish_fixture')
-    async def test_create_dish(self, client: AsyncClient):
-        response = await (client.get(
-            f"/api/v1/menus/{TestDishAPI.menu_id}/submenus/{TestDishAPI.submenu_id}/dishes/{TestDishAPI.dish_id}"))
-        assert response.json()["title"] == "Test Dish"
-        assert response.json()["description"] == "Test Dish Description"
-        assert response.json()["price"] == "42.42"
+        assert dish is not None
+        assert response_dish.status_code == 201
+        assert response_dish.json()["id"] == str(dish.id)
+        assert response_dish.json()["title"] == dish.title
+        assert response_dish.json()["description"] == dish.description
+        assert response_dish.json()['price'] == "42.42"
 
-    @pytest.mark.usefixtures('create_menu_submenu_dish_fixture', 'delete_menu_submenu_dish_fixture')
-    async def test_get_dish(self, client: AsyncClient):
-        response = await (client.get(
-            f"/api/v1/menus/{TestDishAPI.menu_id}/submenus/{TestDishAPI.submenu_id}/dishes/{TestDishAPI.dish_id}"))
+    async def test_get_dish(self, db_session: AsyncSession, client: AsyncClient):
+        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
+        new_submenu = Submenu(title='submenu 1', description='description 1', id=uuid.uuid4(), menu_id=new_menu.id)
+        new_dish = Dish(title='dish 1', description='description 1', price='42.42',
+                        id=uuid.uuid4(), menu_id=new_menu.id, submenu_id=new_submenu.id)
+        db_session.add(new_menu)
+        db_session.add(new_submenu)
+        db_session.add(new_dish)
+        await db_session.commit()
+
+        response = await client.get(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}")
         assert response.status_code == 200
-        assert response.json()["id"] == TestDishAPI.dish_id
+        assert response.json()["id"] == str(new_dish.id)
+        assert response.json()["title"] == new_dish.title
+        assert response.json()["description"] == new_dish.description
+        assert response.json()['price'] == new_dish.price
 
-    @pytest.mark.usefixtures('create_menu_submenu_dish_fixture', 'delete_menu_submenu_dish_fixture')
-    async def test_dish_update(self, client: AsyncClient):
-        update_data = {"title": "Updated Dish", "description": "Updated Description", "price": "42.42"}
-        response = await (client.patch(
-            f"/api/v1/menus/{TestDishAPI.menu_id}/submenus/{TestDishAPI.submenu_id}/dishes/{TestDishAPI.dish_id}",
-            json=update_data))
-        assert response.status_code == 200
-        assert response.json()["title"] == "Updated Dish"
-        assert response.json()["description"] == "Updated Description"
-        assert response.json()["price"] == "42.42"
+    async def test_dish_update(self, db_session: AsyncSession, client: AsyncClient):
+        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
+        new_submenu = Submenu(title='submenu 1', description='description 1', id=uuid.uuid4(), menu_id=new_menu.id)
+        new_dish = Dish(title='dish 1', description='description 1', price='42.42',
+                        id=uuid.uuid4(), menu_id=new_menu.id, submenu_id=new_submenu.id)
+        db_session.add(new_menu)
+        db_session.add(new_submenu)
+        db_session.add(new_dish)
+        await db_session.commit()
 
-    @pytest.mark.usefixtures('create_menu_submenu_dish_fixture')
-    async def test_dish_delete(self, client: AsyncClient):
-        response = await (client.delete(
-            f"/api/v1/menus/{TestDishAPI.menu_id}/submenus/{TestDishAPI.submenu_id}/dishes/{TestDishAPI.dish_id}"))
+        update_data = {"title": "submenu 1 update", "description": "description 1 update", 'price': "20.24"}
+        response = await client.patch(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}", json=update_data)
+        await db_session.refresh(new_dish)
+
+        query = (select(Dish).filter(Dish.id == response.json()['id']))
+        result = await db_session.execute(query)
+        dish = result.scalars().one_or_none()
+
+        assert dish is not None
         assert response.status_code == 200
-        response = await (client.get(
-            f"/api/v1/menus/{TestDishAPI.menu_id}/submenus/{TestDishAPI.submenu_id}/dishes/{TestDishAPI.dish_id}"))
-        assert response.status_code == 404
+        assert response.json()["id"] == str(dish.id)
+        assert response.json()["title"] == dish.title
+        assert response.json()["description"] == dish.description
+        assert response.json()['price'] == dish.price
+
+    async def test_dish_delete(self, db_session: AsyncSession, client: AsyncClient):
+        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
+        new_submenu = Submenu(title='submenu 1', description='description 1', id=uuid.uuid4(), menu_id=new_menu.id)
+        new_dish = Dish(title='dish 1', description='description 1', price='42.42',
+                        id=uuid.uuid4(), menu_id=new_menu.id, submenu_id=new_submenu.id)
+        db_session.add(new_menu)
+        db_session.add(new_submenu)
+        db_session.add(new_dish)
+        await db_session.commit()
+
+        response = await client.delete(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}")
+
+        assert response.json()['detail'] == 'dish deleted'
+
+        query = (select(Dish).filter(Dish.id == new_dish.id))
+        result = await db_session.execute(query)
+        dish_deleted = result.scalars().one_or_none()
+
+        assert dish_deleted is None
