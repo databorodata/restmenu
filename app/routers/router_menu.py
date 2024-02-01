@@ -1,33 +1,25 @@
+import json
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-
-from sqlalchemy import update, delete, func
-from sqlalchemy.orm import selectinload
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.database import get_async_session
-from app.schemas import MenuModel, CreateEditMenuModel
+from app.database import get_async_session, get_redis_connection
+from app.models import Dish, Menu, Submenu
+from app.schemas import CreateEditMenuModel, MenuModel
 
-from sqlalchemy import select
-from app.models import Menu, Submenu, Dish
+router = APIRouter(prefix='/api/v1/menus', tags=['menu'])
+logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/menus", tags=["menu"])
+logging.basicConfig(filename='redis_operations.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
-
-def convert_menu_with_relations(menu):
-    menu_dict = MenuModel.model_validate(menu, from_attributes=True).model_dump()
-    menu_dict.update({"submenus_count": len(menu.submenus), "dishes_count": len(menu.dishes)})
-    return menu_dict
+# Функция для выполнения сложного запроса
 
 
-def convert_menu(menu):
-    menu_dict = MenuModel.model_validate(menu, from_attributes=True).model_dump()
-    menu_dict.update({"submenus_count": menu.submenus_count, "dishes_count": menu.dishes_count})
-    return menu_dict
-
-
-async def get_menu_from_db(session, menu_id: uuid.UUID):
+async def complex_menu_query(session, menu_id=None):
     submenus_count_subq = (
         select(func.count(Submenu.id))
         .where(Submenu.menu_id == Menu.id)
@@ -43,72 +35,142 @@ async def get_menu_from_db(session, menu_id: uuid.UUID):
 
     query = (
         select(
-            Menu.id,
-            Menu.title,
-            Menu.description,
-            submenus_count_subq.label("submenus_count"),
-            dishes_count_subq.label("dishes_count")
+            Menu,
+            submenus_count_subq.label('submenus_count'),
+            dishes_count_subq.label('dishes_count')
         )
-        .where(Menu.id == menu_id)
     )
 
+    if menu_id:
+        query = query.where(Menu.id == menu_id)
+
     result = await session.execute(query)
-    menu = result.first()
+    return result.all() if menu_id is None else result.first()
 
-    if menu is None:
-        raise HTTPException(status_code=404, detail="menu not found")
-    return menu
+# Получение всех меню
 
 
-@router.get("/")
+@router.get('/')
 async def get_menus(session: AsyncSession = Depends(get_async_session)):
-    query = (select(Menu)
-             .options(selectinload(Menu.submenus),
-                      selectinload(Menu.dishes)))
-    result = await session.execute(query)
-    menus = result.scalars().all()
-    return [convert_menu_with_relations(menu) for menu in menus]
+    redis = await get_redis_connection()
+    cache_key = 'menus:all'
+    cached_menus = await redis.get(cache_key)
+
+    if cached_menus:
+        logger.info('Fetching all menus from cache')
+        return json.loads(cached_menus)
+
+    logger.info('Fetching all menus from database')
+    menus_data = await complex_menu_query(session)
+
+    menus_list = [
+        {
+            'id': str(menu.id),
+            'title': menu.title,
+            'description': menu.description,
+            'submenus_count': submenus_count,
+            'dishes_count': dishes_count
+        }
+        for menu, submenus_count, dishes_count in menus_data
+    ]
+
+    await redis.set(cache_key, json.dumps(menus_list), ex=60)
+    print(menus_list)
+    return menus_list
+
+# Получение конкретного меню по ID
 
 
-@router.get("/{menu_id}")
-async def get_menu(menu_id: uuid.UUID,
-                   session: AsyncSession = Depends(get_async_session)):
-    menu = await get_menu_from_db(session, menu_id)
-    return convert_menu(menu)
+@router.get('/{menu_id}')
+async def get_menu(menu_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    redis = await get_redis_connection()
+    cache_key = f'menu:{menu_id}'
+    cached_menu = await redis.get(cache_key)
+
+    if cached_menu:
+        logger.info(f'Fetching menu {menu_id} from cache')
+        return json.loads(cached_menu)
+
+    logger.info(f'Fetching menu {menu_id} from database')
+    menu_item = await complex_menu_query(session, menu_id)
+
+    if menu_item is None:
+        raise HTTPException(status_code=404, detail='menu not found')
+
+    menu, submenus_count, dishes_count = menu_item
+    menu_data = {
+        'id': str(menu.id),
+        'title': menu.title,
+        'description': menu.description,
+        'submenus_count': submenus_count,
+        'dishes_count': dishes_count
+    }
+
+    await redis.set(cache_key, json.dumps(menu_data), ex=60)
+    await redis.delete('menus:all')  # Инвалидируем кэш списка всех меню
+    return menu_data
+
+# Создание нового меню
 
 
-@router.post("/", status_code=201)
-async def create_menu(menu_data: CreateEditMenuModel,
-                      session: AsyncSession = Depends(get_async_session)):
+@router.post('/', status_code=201)
+async def create_menu(menu_data: CreateEditMenuModel, session: AsyncSession = Depends(get_async_session)):
     new_menu = Menu(**menu_data.model_dump(), id=uuid.uuid4())
     session.add(new_menu)
     await session.commit()
-    result = MenuModel.model_validate(new_menu, from_attributes=True).model_dump()
-    result.update({"submenus_count": 0, "dishes_count": 0})
-    return result
+
+    menu_data = {
+        'id': str(new_menu.id),
+        'title': new_menu.title,
+        'description': new_menu.description,
+        'submenus_count': 0,
+        'dishes_count': 0
+    }
+
+    redis = await get_redis_connection()
+    await redis.delete('menus:all')  # Инвалидируем кэш списка всех меню
+    return menu_data
+
+# Обновление меню по ID
 
 
-@router.patch("/{menu_id}")
-async def update_menu(menu_id: uuid.UUID,
-                      menu_data: CreateEditMenuModel,
-                      session: AsyncSession = Depends(get_async_session)):
-    query = (update(Menu)
-             .where(Menu.id == menu_id)
-             .values(**menu_data.model_dump()))
-    await session.execute(query)
+@router.patch('/{menu_id}')
+async def update_menu(menu_id: uuid.UUID, menu_data: CreateEditMenuModel, session: AsyncSession = Depends(get_async_session)):
+    await session.execute(
+        update(Menu)
+        .where(Menu.id == menu_id)
+        .values(**menu_data.model_dump())
+    )
     await session.commit()
 
-    menu = await get_menu_from_db(session, menu_id)
-    return convert_menu(menu)
+    redis = await get_redis_connection()
+    await redis.delete(f'menu:{menu_id}')  # Инвалидируем кэш конкретного меню
+    await redis.delete('menus:all')  # Инвалидируем кэш списка всех меню
+
+    updated_menu = await complex_menu_query(session, menu_id)
+    menu, submenus_count, dishes_count = updated_menu
+    return {
+        'id': str(menu.id),
+        'title': menu.title,
+        'description': menu.description,
+        'submenus_count': submenus_count,
+        'dishes_count': dishes_count
+    }
+
+# Удаление меню по ID
 
 
-@router.delete("/{menu_id}")
-async def delete_menu(menu_id: uuid.UUID,
-                      session: AsyncSession = Depends(get_async_session)):
-    query = (delete(Menu)
-             .where(Menu.id == menu_id))
-    result = await session.execute(query)
+@router.delete('/{menu_id}')
+async def delete_menu(menu_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    result = await session.execute(
+        delete(Menu).where(Menu.id == menu_id)
+    )
     if result.rowcount == 0:
-        raise HTTPException(status_code=404, detail="menu not found")
+        raise HTTPException(status_code=404, detail='menu not found')
     await session.commit()
-    return {"detail": "menu deleted"}
+
+    redis = await get_redis_connection()
+    await redis.delete(f'menu:{menu_id}')  # Инвалидируем кэш конкретного меню
+    await redis.delete('menus:all')  # Инвалидируем кэш списка всех меню
+
+    return {'detail': 'menu deleted'}

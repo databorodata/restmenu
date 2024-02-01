@@ -1,0 +1,81 @@
+2024-02-01 16:46:53,593 - Fetching all menus from database
+2024-02-01 16:46:53,837 - Fetching all menus from database
+2024-02-01 16:46:53,894 - Fetching menu 56df6e93-e903-4ce0-ab89-237ad952a7c1 from database
+2024-02-01 16:46:54,029 - Fetching menu 56df6e93-e903-4ce0-ab89-237ad952a7c1 from database
+2024-02-01 16:46:54,177 - Fetching all menus from database
+2024-02-01 16:46:54,282 - Fetching menu 56df6e93-e903-4ce0-ab89-237ad952a7c1 from database
+2024-02-01 17:24:52,229 - HTTP Request: POST http://test/api/v1/menus/ "HTTP/1.1 201 Created"
+2024-02-01 17:24:52,242 - HTTP Request: POST http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43/submenus/ "HTTP/1.1 201 Created"
+2024-02-01 17:24:52,253 - HTTP Request: POST http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43/submenus/fb9c1b85-52ba-4b79-a791-1fb3c344d663/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:24:52,264 - HTTP Request: POST http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43/submenus/fb9c1b85-52ba-4b79-a791-1fb3c344d663/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:24:52,274 - Fetching menu 7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43 from database
+2024-02-01 17:24:52,285 - HTTP Request: GET http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43 "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,310 - HTTP Request: GET http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43/submenus/fb9c1b85-52ba-4b79-a791-1fb3c344d663 "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,326 - HTTP Request: DELETE http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43/submenus/fb9c1b85-52ba-4b79-a791-1fb3c344d663 "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,333 - HTTP Request: GET http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43/submenus/ "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,341 - HTTP Request: GET http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43/submenus/fb9c1b85-52ba-4b79-a791-1fb3c344d663/dishes/ "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,345 - Fetching menu 7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43 from cache
+2024-02-01 17:24:52,346 - HTTP Request: GET http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43 "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,418 - HTTP Request: DELETE http://test/api/v1/menus/7b3e0b4f-570c-4caf-9cbd-e23b4dc88e43 "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,430 - Fetching all menus from database
+2024-02-01 17:24:52,437 - HTTP Request: GET http://test/api/v1/menus/ "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,503 - HTTP Request: POST http://test/api/v1/menus/ba0e0d93-ffff-48f6-ab0b-fe06c8611649/submenus/62c559e0-7d61-4f53-8644-774debeb612a/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:24:52,592 - HTTP Request: GET http://test/api/v1/menus/d14c1645-2359-49b4-9847-782fc007074f/submenus/4e6d8443-e7db-4acd-a6ce-1167c5bfb46f/dishes/ce750c23-3f33-447e-a41d-0cd7c36fcbfc "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,651 - HTTP Request: PATCH http://test/api/v1/menus/259cdd91-5dcd-4e4b-a87b-22d7bbef1857/submenus/309a38a9-f1c2-41a9-9e2e-c403d4027e67/dishes/9c793b46-0130-47e7-878a-b2ff1bc4c2f4 "HTTP/1.1 200 OK"
+2024-02-01 17:24:52,746 - HTTP Request: DELETE http://test/api/v1/menus/c7a48988-6049-4fe2-bac3-5e4328f84442/submenus/6e951ad9-7519-4ca8-9605-096bc6dff2bd/dishes/515c84a1-475f-433a-b51f-b7a860a4c4a4 "HTTP/1.1 200 OK"
+2024-02-01 17:24:53,018 - HTTP Request: POST http://test/api/v1/menus/74245699-b741-494b-9c69-bd3af986a02a/submenus/ "HTTP/1.1 201 Created"
+2024-02-01 17:24:53,117 - HTTP Request: GET http://test/api/v1/menus/0d388712-1643-47ac-a2e1-18ae4f31cd3f/submenus/52d8ec71-9c49-486f-9b89-7bd2bb4e6fda "HTTP/1.1 200 OK"
+2024-02-01 17:24:53,182 - HTTP Request: PATCH http://test/api/v1/menus/9ff4bc2b-e1fc-43a9-9846-8f652ed21e0f/submenus/2e0d4995-707f-4b0a-9a12-7c9e258cd85a "HTTP/1.1 200 OK"
+2024-02-01 17:24:53,281 - HTTP Request: DELETE http://test/api/v1/menus/f4ec6bd0-414a-4cb5-8d3c-444bb4791383/submenus/31e58944-424e-45da-822f-e13255f8d448 "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,120 - HTTP Request: POST http://test/api/v1/menus/ "HTTP/1.1 201 Created"
+2024-02-01 17:41:35,138 - HTTP Request: POST http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab/submenus/ "HTTP/1.1 201 Created"
+2024-02-01 17:41:35,169 - HTTP Request: POST http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab/submenus/720577b7-c0be-4dec-bec4-31253bc6aebd/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:41:35,181 - HTTP Request: POST http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab/submenus/720577b7-c0be-4dec-bec4-31253bc6aebd/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:41:35,191 - Fetching menu e6254be3-0265-428a-bba1-c0e2e7a5fcab from database
+2024-02-01 17:41:35,202 - HTTP Request: GET http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,233 - HTTP Request: GET http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab/submenus/720577b7-c0be-4dec-bec4-31253bc6aebd "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,255 - HTTP Request: DELETE http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab/submenus/720577b7-c0be-4dec-bec4-31253bc6aebd "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,265 - HTTP Request: GET http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab/submenus/ "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,275 - HTTP Request: GET http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab/submenus/720577b7-c0be-4dec-bec4-31253bc6aebd/dishes/ "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,282 - Fetching menu e6254be3-0265-428a-bba1-c0e2e7a5fcab from cache
+2024-02-01 17:41:35,283 - HTTP Request: GET http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,353 - HTTP Request: DELETE http://test/api/v1/menus/e6254be3-0265-428a-bba1-c0e2e7a5fcab "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,358 - Fetching all menus from database
+2024-02-01 17:41:35,363 - HTTP Request: GET http://test/api/v1/menus/ "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,436 - HTTP Request: POST http://test/api/v1/menus/38ae429f-b19a-4a90-986f-27f77123bb32/submenus/63de1173-983f-4f2b-ae9e-a1ffead5df86/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:41:35,542 - HTTP Request: GET http://test/api/v1/menus/c5773dab-5aa6-48c2-9a01-38c17ef8e621/submenus/b27b7445-5c8f-4267-b1e5-a0d4c140afa1/dishes/a2335654-59ee-4bf9-8913-32b68fde2041 "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,621 - HTTP Request: PATCH http://test/api/v1/menus/5aaab32e-6a46-4ef8-904a-564791d78f84/submenus/5c75cac9-a004-4930-a3c3-49a44c20b696/dishes/78f72662-49d2-43a2-9d56-f7a14594d4ef "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,734 - HTTP Request: DELETE http://test/api/v1/menus/22b4d2fc-d17a-407f-ac2c-7fb17ee8670e/submenus/8ec1599a-dc76-4ac0-9e4b-49423cf848c3/dishes/7cadfea3-0231-4b4d-a106-260c1d8dc182 "HTTP/1.1 200 OK"
+2024-02-01 17:41:35,787 - HTTP Request: POST http://test/api/v1/menus/ "HTTP/1.1 201 Created"
+2024-02-01 17:41:36,072 - HTTP Request: POST http://test/api/v1/menus/562fd8f9-3f4f-4136-b33c-5e2e37cbfbba/submenus/ "HTTP/1.1 201 Created"
+2024-02-01 17:41:36,170 - HTTP Request: GET http://test/api/v1/menus/c082ee5d-056e-4e0b-bd04-f233d90746a0/submenus/27a928b4-120a-4423-be5f-70796c8a90e6 "HTTP/1.1 200 OK"
+2024-02-01 17:41:36,237 - HTTP Request: PATCH http://test/api/v1/menus/d34b77c2-54a1-49ba-9d84-9dec557b9faa/submenus/4110f9e2-e110-4943-854d-c43576320f0e "HTTP/1.1 200 OK"
+2024-02-01 17:41:36,342 - HTTP Request: DELETE http://test/api/v1/menus/07010db7-f3db-4087-814e-d70085389bb2/submenus/4448d7c8-2f60-4979-b7a8-56fe9cd0d937 "HTTP/1.1 200 OK"
+2024-02-01 17:52:47,898 - HTTP Request: POST http://test/api/v1/menus/ "HTTP/1.1 201 Created"
+2024-02-01 17:52:47,911 - HTTP Request: POST http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28/submenus/ "HTTP/1.1 201 Created"
+2024-02-01 17:52:47,930 - HTTP Request: POST http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28/submenus/de110581-f9ca-49cb-9f61-538128901135/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:52:47,938 - HTTP Request: POST http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28/submenus/de110581-f9ca-49cb-9f61-538128901135/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:52:47,945 - Fetching menu 1c62abdc-bb6a-4da0-b779-a6da1eb82a28 from database
+2024-02-01 17:52:47,956 - HTTP Request: GET http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28 "HTTP/1.1 200 OK"
+2024-02-01 17:52:47,976 - HTTP Request: GET http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28/submenus/de110581-f9ca-49cb-9f61-538128901135 "HTTP/1.1 200 OK"
+2024-02-01 17:52:47,986 - HTTP Request: DELETE http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28/submenus/de110581-f9ca-49cb-9f61-538128901135 "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,000 - HTTP Request: GET http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28/submenus/ "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,008 - HTTP Request: GET http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28/submenus/de110581-f9ca-49cb-9f61-538128901135/dishes/ "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,015 - Fetching menu 1c62abdc-bb6a-4da0-b779-a6da1eb82a28 from cache
+2024-02-01 17:52:48,016 - HTTP Request: GET http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28 "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,076 - HTTP Request: DELETE http://test/api/v1/menus/1c62abdc-bb6a-4da0-b779-a6da1eb82a28 "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,079 - Fetching all menus from database
+2024-02-01 17:52:48,085 - HTTP Request: GET http://test/api/v1/menus/ "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,148 - HTTP Request: POST http://test/api/v1/menus/7d5db56a-5e13-4567-a5d4-a2126f8ee649/submenus/c250036d-2a22-4843-b03d-0bd21f62d496/dishes/ "HTTP/1.1 201 Created"
+2024-02-01 17:52:48,248 - HTTP Request: GET http://test/api/v1/menus/5a2e7d74-8052-4551-bf0d-18cc3d503861/submenus/e8eca665-b4e1-4a29-8d42-fd76a1bd5dba/dishes/b236a988-1b43-4f5a-aa38-9fa5a63b8f41 "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,312 - HTTP Request: PATCH http://test/api/v1/menus/dc1a32b9-9d0a-484a-a46a-9b679dd775d9/submenus/5e149b11-5021-46e6-8f43-fcd4b3e78d8a/dishes/3653c922-e98a-4bc9-b0e0-5bad7da0ccad "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,460 - HTTP Request: DELETE http://test/api/v1/menus/b1e5427d-39c9-4e7a-8705-e804f4a3ffab/submenus/c9bcdd3b-3db1-4d2d-a936-458c66ea2682/dishes/8497071b-da6d-4bf8-bb3e-df5a802f8c67 "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,519 - HTTP Request: POST http://test/api/v1/menus/ "HTTP/1.1 201 Created"
+2024-02-01 17:52:48,627 - Fetching menu 7340b2b4-0f14-4379-b42d-1aff08a4f892 from database
+2024-02-01 17:52:48,633 - HTTP Request: GET http://test/api/v1/menus/7340b2b4-0f14-4379-b42d-1aff08a4f892 "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,699 - HTTP Request: PATCH http://test/api/v1/menus/f6014798-6cdf-4752-aa9c-3a52dbcd0902 "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,810 - HTTP Request: DELETE http://test/api/v1/menus/31f0f6ed-982c-426e-be31-5b3cdaaa2a22 "HTTP/1.1 200 OK"
+2024-02-01 17:52:48,907 - HTTP Request: POST http://test/api/v1/menus/269761f8-f985-47b5-a35f-ec178373d3ae/submenus/ "HTTP/1.1 201 Created"
+2024-02-01 17:52:49,000 - HTTP Request: GET http://test/api/v1/menus/322eeaf1-9077-4920-a758-75094a60b65e/submenus/e11582b9-5cd8-416f-9219-97187de14ab3 "HTTP/1.1 200 OK"
+2024-02-01 17:52:49,078 - HTTP Request: PATCH http://test/api/v1/menus/ec6e1ffe-6e71-4bac-ab3f-d8030f290178/submenus/5a48efc2-e0e7-429f-b5cd-0ca03488384c "HTTP/1.1 200 OK"
+2024-02-01 17:52:49,177 - HTTP Request: DELETE http://test/api/v1/menus/42c159b3-8c9c-4715-bfbe-e26cb37ccbb6/submenus/68637f29-2536-40a6-b6d3-e43b44a059b4 "HTTP/1.1 200 OK"

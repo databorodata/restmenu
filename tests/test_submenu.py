@@ -15,8 +15,8 @@ class TestSubmenuAPI:
         db_session.add(new_menu)
         await db_session.commit()
 
-        data_submenu = {"title": "Test Submenu", "description": "Test Submenu Description"}
-        response_submenu = await client.post(f"/api/v1/menus/{new_menu.id}/submenus/", json=data_submenu)
+        data_submenu = {'title': 'Test Submenu', 'description': 'Test Submenu Description'}
+        response_submenu = await client.post(f'/api/v1/menus/{new_menu.id}/submenus/', json=data_submenu)
 
         query = (select(Submenu).filter(Submenu.id == response_submenu.json()['id']))
         result = await db_session.execute(query)
@@ -24,9 +24,9 @@ class TestSubmenuAPI:
 
         assert submenu is not None
         assert response_submenu.status_code == 201
-        assert response_submenu.json()["id"] == str(submenu.id)
-        assert response_submenu.json()["title"] == submenu.title
-        assert response_submenu.json()["description"] == submenu.description
+        assert response_submenu.json()['id'] == str(submenu.id)
+        assert response_submenu.json()['title'] == submenu.title
+        assert response_submenu.json()['description'] == submenu.description
         assert response_submenu.json()['dishes_count'] == 0
 
     async def test_get_submenu(self, db_session: AsyncSession, client: AsyncClient):
@@ -36,11 +36,11 @@ class TestSubmenuAPI:
         db_session.add(new_submenu)
         await db_session.commit()
 
-        response = await client.get(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}")
+        response = await client.get(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}')
         assert response.status_code == 200
-        assert response.json()["id"] == str(new_submenu.id)
-        assert response.json()["title"] == new_submenu.title
-        assert response.json()["description"] == new_submenu.description
+        assert response.json()['id'] == str(new_submenu.id)
+        assert response.json()['title'] == new_submenu.title
+        assert response.json()['description'] == new_submenu.description
         assert response.json()['dishes_count'] == 0
 
     async def test_submenu_update(self, db_session: AsyncSession, client: AsyncClient):
@@ -50,8 +50,8 @@ class TestSubmenuAPI:
         db_session.add(new_submenu)
         await db_session.commit()
 
-        update_data = {"title": "submenu 1 update", "description": "description 1 update"}
-        response = await client.patch(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}", json=update_data)
+        update_data = {'title': 'submenu 1 update', 'description': 'description 1 update'}
+        response = await client.patch(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}', json=update_data)
         await db_session.refresh(new_submenu)
 
         query = (select(Submenu).filter(Submenu.id == response.json()['id']))
@@ -60,9 +60,9 @@ class TestSubmenuAPI:
 
         assert submenu is not None
         assert response.status_code == 200
-        assert response.json()["id"] == str(submenu.id)
-        assert response.json()["title"] == submenu.title
-        assert response.json()["description"] == submenu.description
+        assert response.json()['id'] == str(submenu.id)
+        assert response.json()['title'] == submenu.title
+        assert response.json()['description'] == submenu.description
         assert response.json()['dishes_count'] == 0
 
     async def test_submenu_delete(self, db_session: AsyncSession, client: AsyncClient):
@@ -72,7 +72,7 @@ class TestSubmenuAPI:
         db_session.add(new_submenu)
         await db_session.commit()
 
-        response = await client.delete(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}")
+        response = await client.delete(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}')
 
         assert response.json()['detail'] == 'submenu deleted'
 

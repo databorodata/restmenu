@@ -18,9 +18,9 @@ class TestDishAPI:
         db_session.add(new_submenu)
         await db_session.commit()
 
-        data_dish = {"title": "Test Dish", "description": "Test Dish Description", "price": "42.42"}
+        data_dish = {'title': 'Test Dish', 'description': 'Test Dish Description', 'price': '42.42'}
         response_dish = await (client.
-                               post(f"/api/v1/menus/{new_menu.id}/submenus/{new_submenu.id}/dishes/", json=data_dish))
+                               post(f'/api/v1/menus/{new_menu.id}/submenus/{new_submenu.id}/dishes/', json=data_dish))
 
         query = (select(Dish).filter(Dish.id == response_dish.json()['id']))
         result = await db_session.execute(query)
@@ -28,10 +28,10 @@ class TestDishAPI:
 
         assert dish is not None
         assert response_dish.status_code == 201
-        assert response_dish.json()["id"] == str(dish.id)
-        assert response_dish.json()["title"] == dish.title
-        assert response_dish.json()["description"] == dish.description
-        assert response_dish.json()['price'] == "42.42"
+        assert response_dish.json()['id'] == str(dish.id)
+        assert response_dish.json()['title'] == dish.title
+        assert response_dish.json()['description'] == dish.description
+        assert response_dish.json()['price'] == '42.42'
 
     async def test_get_dish(self, db_session: AsyncSession, client: AsyncClient):
         new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
@@ -43,11 +43,11 @@ class TestDishAPI:
         db_session.add(new_dish)
         await db_session.commit()
 
-        response = await client.get(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}")
+        response = await client.get(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}')
         assert response.status_code == 200
-        assert response.json()["id"] == str(new_dish.id)
-        assert response.json()["title"] == new_dish.title
-        assert response.json()["description"] == new_dish.description
+        assert response.json()['id'] == str(new_dish.id)
+        assert response.json()['title'] == new_dish.title
+        assert response.json()['description'] == new_dish.description
         assert response.json()['price'] == new_dish.price
 
     async def test_dish_update(self, db_session: AsyncSession, client: AsyncClient):
@@ -60,8 +60,8 @@ class TestDishAPI:
         db_session.add(new_dish)
         await db_session.commit()
 
-        update_data = {"title": "submenu 1 update", "description": "description 1 update", 'price': "20.24"}
-        response = await client.patch(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}", json=update_data)
+        update_data = {'title': 'submenu 1 update', 'description': 'description 1 update', 'price': '20.24'}
+        response = await client.patch(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}', json=update_data)
         await db_session.refresh(new_dish)
 
         query = (select(Dish).filter(Dish.id == response.json()['id']))
@@ -70,9 +70,9 @@ class TestDishAPI:
 
         assert dish is not None
         assert response.status_code == 200
-        assert response.json()["id"] == str(dish.id)
-        assert response.json()["title"] == dish.title
-        assert response.json()["description"] == dish.description
+        assert response.json()['id'] == str(dish.id)
+        assert response.json()['title'] == dish.title
+        assert response.json()['description'] == dish.description
         assert response.json()['price'] == dish.price
 
     async def test_dish_delete(self, db_session: AsyncSession, client: AsyncClient):
@@ -85,7 +85,7 @@ class TestDishAPI:
         db_session.add(new_dish)
         await db_session.commit()
 
-        response = await client.delete(f"/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}")
+        response = await client.delete(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}/dishes/{str(new_dish.id)}')
 
         assert response.json()['detail'] == 'dish deleted'
 

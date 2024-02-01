@@ -9,7 +9,9 @@
 │   │   ├── models.cpython-310.pyc
 │   │   └── schemas.cpython-310.pyc
 │   ├── routers
+│   │   ├── complex.py
 │   │   ├── __pycache__
+│   │   │   ├── complex.cpython-310.pyc
 │   │   │   ├── router_dish.cpython-310.pyc
 │   │   │   ├── router_menu.cpython-310.pyc
 │   │   │   └── router_submenu.cpython-310.pyc
@@ -21,15 +23,35 @@
 ├── data
 │   ├── menu app.postman_collection.json
 │   └── menu app.postman_environment.json
+├── docker-compose-tests.yml
+├── docker-compose.yml
+├── Dockerfile
 ├── __pycache__
 │   └── config.cpython-310.pyc
+├── pytest.ini
 ├── README.md
 ├── requirements.txt
 ├── run.py
 ├── start.sh
-└── structure.txt
+├── structure.txt
+└── tests
+    ├── conftest.py
+    ├── __init__.py
+    ├── __pycache__
+    │   ├── conftest.cpython-310-pytest-7.1.2.pyc
+    │   ├── fixstures.cpython-310.pyc
+    │   ├── fixtures.cpython-310.pyc
+    │   ├── __init__.cpython-310.pyc
+    │   ├── test_api.cpython-310-pytest-7.1.2.pyc
+    │   ├── test_count_submenu_dish.cpython-310-pytest-7.1.2.pyc
+    │   ├── test_dish.cpython-310-pytest-7.1.2.pyc
+    │   ├── test_fixstures.cpython-310-pytest-7.1.2.pyc
+    │   ├── test_fixtures.cpython-310-pytest-7.1.2.pyc
+    │   ├── test_menu.cpython-310-pytest-7.1.2.pyc
+    │   └── test_submenu.cpython-310-pytest-7.1.2.pyc
+    ├── test_count_submenu_dish.py
+    ├── test_dish.py
+    ├── test_menu.py
+    └── test_submenu.py
 
-6 directories, 23 files
-
-tree -I 'data | __pycache__ | .git | .idea | .venv' > structure.txt
-
+8 directories, 46 files

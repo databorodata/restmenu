@@ -1,15 +1,14 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-
-from sqlalchemy import select, update, delete
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session
-from app.schemas import DishModel, CreateEditDishModel
 from app.models import Dish
+from app.schemas import CreateEditDishModel, DishModel
 
-router = APIRouter(prefix="/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes", tags=["dish"])
+router = APIRouter(prefix='/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes', tags=['dish'])
 
 
 def convert_dish(dish):
@@ -22,12 +21,12 @@ async def get_dish_from_db(session,
                            dish_id: uuid.UUID):
     query = (select(Dish)
              .filter(Dish.submenu_id == submenu_id,
-                                 Dish.menu_id == menu_id,
-                                 Dish.id == dish_id))
+                     Dish.menu_id == menu_id,
+                     Dish.id == dish_id))
     result = await session.execute(query)
     dish = result.scalars().one_or_none()
     if dish is None:
-        raise HTTPException(status_code=404, detail="dish not found")
+        raise HTTPException(status_code=404, detail='dish not found')
     return dish
 
 
@@ -36,10 +35,10 @@ def validate_price(price: str) -> str:
         price_float = float(price)
     except ValueError:
         raise HTTPException(status_code=400, detail='price type is not correct')
-    return "{:.2f}".format(price_float)
+    return f'{price_float:.2f}'
 
 
-@router.get("/")
+@router.get('/')
 async def get_dishes(menu_id: uuid.UUID,
                      submenu_id: uuid.UUID,
                      session: AsyncSession = Depends(get_async_session)):
@@ -51,7 +50,7 @@ async def get_dishes(menu_id: uuid.UUID,
     return [convert_dish(dish) for dish in dishes]
 
 
-@router.get("/{dish_id}")
+@router.get('/{dish_id}')
 async def get_dish(menu_id: uuid.UUID,
                    submenu_id: uuid.UUID,
                    dish_id: uuid.UUID,
@@ -60,7 +59,7 @@ async def get_dish(menu_id: uuid.UUID,
     return convert_dish(dish)
 
 
-@router.post("/", status_code=201)
+@router.post('/', status_code=201)
 async def create_dish(menu_id: uuid.UUID,
                       submenu_id: uuid.UUID,
                       dish_data: CreateEditDishModel,
@@ -75,7 +74,7 @@ async def create_dish(menu_id: uuid.UUID,
     return convert_dish(new_dish)
 
 
-@router.patch("/{dish_id}")
+@router.patch('/{dish_id}')
 async def update_dish(menu_id: uuid.UUID,
                       submenu_id: uuid.UUID,
                       dish_id: uuid.UUID,
@@ -94,7 +93,7 @@ async def update_dish(menu_id: uuid.UUID,
     return convert_dish(dish)
 
 
-@router.delete("/{dish_id}")
+@router.delete('/{dish_id}')
 async def delete_dish(menu_id: uuid.UUID,
                       submenu_id: uuid.UUID,
                       dish_id: uuid.UUID,
@@ -104,6 +103,6 @@ async def delete_dish(menu_id: uuid.UUID,
                                Dish.menu_id == menu_id)
     result = await session.execute(query)
     if result.rowcount == 0:
-        raise HTTPException(status_code=404, detail="dish not found")
+        raise HTTPException(status_code=404, detail='dish not found')
     await session.commit()
-    return {"detail": "dish deleted"}
+    return {'detail': 'dish deleted'}
