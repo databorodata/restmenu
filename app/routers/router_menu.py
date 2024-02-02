@@ -2,6 +2,7 @@ import json
 import logging
 import uuid
 
+import aioredis
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +17,9 @@ logger = logging.getLogger(__name__)
 
 logging.basicConfig(filename='redis_operations.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
-# Функция для выполнения сложного запроса
+# menu:aaa
+# menu:aaa/submenu:bbb
+# menu:aaa/submenu:bbb/dish:ccc
 
 
 async def complex_menu_query(session, menu_id=None):
@@ -47,14 +50,13 @@ async def complex_menu_query(session, menu_id=None):
     result = await session.execute(query)
     return result.all() if menu_id is None else result.first()
 
-# Получение всех меню
-
 
 @router.get('/')
 async def get_menus(session: AsyncSession = Depends(get_async_session)):
     redis = await get_redis_connection()
     cache_key = 'menus:all'
     cached_menus = await redis.get(cache_key)
+    print('get_menus', cached_menus)
 
     if cached_menus:
         logger.info('Fetching all menus from cache')
@@ -75,7 +77,7 @@ async def get_menus(session: AsyncSession = Depends(get_async_session)):
     ]
 
     await redis.set(cache_key, json.dumps(menus_list), ex=60)
-    print(menus_list)
+
     return menus_list
 
 # Получение конкретного меню по ID
@@ -86,6 +88,7 @@ async def get_menu(menu_id: uuid.UUID, session: AsyncSession = Depends(get_async
     redis = await get_redis_connection()
     cache_key = f'menu:{menu_id}'
     cached_menu = await redis.get(cache_key)
+    print('get_menus', cached_menu)
 
     if cached_menu:
         logger.info(f'Fetching menu {menu_id} from cache')
@@ -107,7 +110,7 @@ async def get_menu(menu_id: uuid.UUID, session: AsyncSession = Depends(get_async
     }
 
     await redis.set(cache_key, json.dumps(menu_data), ex=60)
-    await redis.delete('menus:all')  # Инвалидируем кэш списка всех меню
+
     return menu_data
 
 # Создание нового меню
@@ -127,8 +130,11 @@ async def create_menu(menu_data: CreateEditMenuModel, session: AsyncSession = De
         'dishes_count': 0
     }
 
-    redis = await get_redis_connection()
-    await redis.delete('menus:all')  # Инвалидируем кэш списка всех меню
+    redis = await aioredis.from_url("redis://localhost")
+    cache_key = f'menu:{new_menu.id}'
+    await redis.set(cache_key, json.dumps(menu_data), ex=60)
+    await redis.delete('menus:all')
+
     return menu_data
 
 # Обновление меню по ID
@@ -143,21 +149,24 @@ async def update_menu(menu_id: uuid.UUID, menu_data: CreateEditMenuModel, sessio
     )
     await session.commit()
 
-    redis = await get_redis_connection()
-    await redis.delete(f'menu:{menu_id}')  # Инвалидируем кэш конкретного меню
-    await redis.delete('menus:all')  # Инвалидируем кэш списка всех меню
 
     updated_menu = await complex_menu_query(session, menu_id)
     menu, submenus_count, dishes_count = updated_menu
-    return {
-        'id': str(menu.id),
-        'title': menu.title,
-        'description': menu.description,
+
+    new_menu_data = {
+        'id': str(menu),
+        'title': menu_data.title,
+        'description': menu_data.description,
         'submenus_count': submenus_count,
         'dishes_count': dishes_count
     }
 
-# Удаление меню по ID
+    redis = await get_redis_connection()
+    cache_key = f'menu:{menu_id}'
+    await redis.set(cache_key, json.dumps(new_menu_data), ex=60)
+
+    return new_menu_data
+
 
 
 @router.delete('/{menu_id}')
@@ -169,8 +178,16 @@ async def delete_menu(menu_id: uuid.UUID, session: AsyncSession = Depends(get_as
         raise HTTPException(status_code=404, detail='menu not found')
     await session.commit()
 
-    redis = await get_redis_connection()
-    await redis.delete(f'menu:{menu_id}')  # Инвалидируем кэш конкретного меню
-    await redis.delete('menus:all')  # Инвалидируем кэш списка всех меню
+    redis = await aioredis.from_url("redis://localhost")
+
+    menu_keys = [key async for key in redis.iscan(match=f'menu:{menu_id}/submenu:*')]
+    if menu_keys:
+        await redis.delete(*menu_keys)
+    await redis.delete(f'menu:{menu_id}')
+    await redis.delete('menus:all')
 
     return {'detail': 'menu deleted'}
+
+
+
+
