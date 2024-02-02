@@ -37,6 +37,7 @@ async def get_submenu_with_dishes_count(session, menu_id: uuid.UUID, submenu_id:
 # Конвертация объекта Submenu в словарь, включая количество блюд
 def convert_submenu(submenu, dishes_count):
     submenu_dict = SubmenuModel.model_validate(submenu, from_attributes=True).model_dump()
+    submenu_dict['id'] = str(submenu_dict['id'])
     submenu_dict.update({'dishes_count': dishes_count})
     return submenu_dict
 
@@ -88,8 +89,9 @@ async def create_submenu(menu_id: uuid.UUID, submenu_data: CreateEditSubmenuMode
     await session.commit()
 
     submenu_dict = convert_submenu(new_submenu, dishes_count=0)
+    submenu_dict['id'] = str(submenu_dict['id'])
 
-    redis = await aioredis.from_url("redis://localhost")
+    redis = await get_redis_connection()
     cache_key = f'menu:{menu_id}/submenu/{str(new_submenu.id)}'
     await redis.set(cache_key, json.dumps(submenu_dict), ex=60)
     await redis.delete(f'menu:{menu_id}/submenus:all')
@@ -113,7 +115,7 @@ async def update_submenu(menu_id: uuid.UUID, submenu_id: uuid.UUID, submenu_data
         'dishes_count': dishes_count
     }
 
-    redis = await aioredis.from_url("redis://localhost")
+    redis = await get_redis_connection()
     cache_key = f'submenu:{submenu_id}'
     await redis.set(cache_key, json.dumps(new_submenu_data), ex=60)
     await redis.delete(f'menu:{menu_id}/submenus:all')  # Инвалидируем кэш списка всех меню
@@ -127,9 +129,19 @@ async def delete_submenu(menu_id: uuid.UUID, submenu_id: uuid.UUID, session: Asy
         raise HTTPException(status_code=404, detail='submenu not found')
     await session.commit()
 
-    redis = await aioredis.from_url("redis://localhost")
+    redis = await get_redis_connection()
 
-    submenu_keys = [key async for key in redis.iscan(match=f'menu:{menu_id}/submenu:{submenu_id}*')]
+    cursor = 0
+    submenu_keys = []
+
+    # Перебор ключей, соответствующих шаблону
+    while True:
+        cursor, keys = await redis.scan(cursor, match=f'menu:{menu_id}/submenu:{submenu_id}*', count=100)
+        submenu_keys.extend(keys)
+        if cursor == 0:  # Если курсор вернулся в начало, завершаем цикл
+            break
+
+    # submenu_keys = [key async for key in redis.iscan(match=f'menu:{menu_id}/submenu:{submenu_id}*')]
     if submenu_keys:
         await redis.delete(*submenu_keys)
     await redis.delete(f'menu:{menu_id}/submenus:all')

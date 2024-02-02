@@ -130,7 +130,7 @@ async def create_menu(menu_data: CreateEditMenuModel, session: AsyncSession = De
         'dishes_count': 0
     }
 
-    redis = await aioredis.from_url("redis://localhost")
+    redis = await get_redis_connection()
     cache_key = f'menu:{new_menu.id}'
     await redis.set(cache_key, json.dumps(menu_data), ex=60)
     await redis.delete('menus:all')
@@ -178,9 +178,20 @@ async def delete_menu(menu_id: uuid.UUID, session: AsyncSession = Depends(get_as
         raise HTTPException(status_code=404, detail='menu not found')
     await session.commit()
 
-    redis = await aioredis.from_url("redis://localhost")
+    redis = await get_redis_connection()
 
-    menu_keys = [key async for key in redis.iscan(match=f'menu:{menu_id}/submenu:*')]
+    # Инициализация сканирования
+    cursor = 0
+    menu_keys = []
+
+    # Перебор ключей, соответствующих шаблону
+    while True:
+        cursor, keys = await redis.scan(cursor, match=f'menu:{menu_id}/submenu:*', count=100)
+        menu_keys.extend(keys)
+        if cursor == 0:  # Если курсор вернулся в начало, завершаем цикл
+            break
+
+    # menu_keys = [key async for key in redis.scan(match=f'menu:{menu_id}/submenu:*')]
     if menu_keys:
         await redis.delete(*menu_keys)
     await redis.delete(f'menu:{menu_id}')

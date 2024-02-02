@@ -18,7 +18,9 @@ logging.basicConfig(filename='redis_operations.log', level=logging.INFO, format=
 
 
 def convert_dish(dish):
-    return DishModel.model_validate(dish, from_attributes=True).model_dump()
+    dish_dict = DishModel.model_validate(dish, from_attributes=True).model_dump()
+    dish_dict['id'] = str(dish_dict['id'])
+    return dish_dict
 
 
 async def get_dish_from_db(session,
@@ -100,9 +102,9 @@ async def create_dish(menu_id: uuid.UUID,
 
     new_dict = convert_dish(new_dish)
 
-    redis = await aioredis.from_url("redis://localhost")
+    redis = await get_redis_connection()
     cache_key = f'menu:{menu_id}/submenu/{submenu_id}/dish/{str({new_dish.id})}'
-    await redis.set(cache_key, json.dumps(new_dish), ex=60)
+    await redis.set(cache_key, json.dumps(new_dict), ex=60)
 
     await redis.delete(f'menu:{menu_id}/submenu:{submenu_id}/dishes:all')
     await redis.delete(f'menu:{menu_id}/submenu:{submenu_id}')
@@ -131,7 +133,7 @@ async def update_dish(menu_id: uuid.UUID,
     dish = await get_dish_from_db(session, menu_id, submenu_id, dish_id)
     dish_dict = convert_dish(dish)
 
-    redis = await aioredis.from_url("redis://localhost")
+    redis = await get_redis_connection()
     cache_key = f'menu:{menu_id}/submenu/{submenu_id}/dish/{dish_id}'
     await redis.set(cache_key, json.dumps(dish_dict), ex=60)
     await redis.delete(f'menu:{menu_id}/submenu/{submenu_id}/dishes:all')
@@ -152,7 +154,7 @@ async def delete_dish(menu_id: uuid.UUID,
         raise HTTPException(status_code=404, detail='dish not found')
     await session.commit()
 
-    redis = await aioredis.from_url("redis://localhost")
+    redis = await get_redis_connection()
     await redis.delete(f'menu:{menu_id}/submenu:{submenu_id}/dish:{dish_id}')
     await redis.delete(f'menu:{menu_id}/submenu:{submenu_id}/dishes:all')
     await redis.delete(f'menu:{menu_id}/submenu:{submenu_id}')
@@ -161,3 +163,9 @@ async def delete_dish(menu_id: uuid.UUID,
     await redis.delete('menus:all')
 
     return {'detail': 'dish deleted'}
+
+
+
+
+
+
