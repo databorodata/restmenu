@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Menu
+from app.repositories.menu_repository import MenuRepository
 from app.routers.router_menu import router as router_menu
 from tests.conftest import client, db_session
 
@@ -28,6 +29,8 @@ class TestMenuAPI:
         assert response.json()['dishes_count'] == 0
 
     async def test_get_menu(self, db_session: AsyncSession, client: AsyncClient):
+        # repo = MenuRepository(db_session)
+        # new_menu = await repo.create_menu({})
         new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
         db_session.add(new_menu)
         await db_session.commit()

@@ -1,12 +1,14 @@
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 
+from app.database import get_async_session
 from app.models import Dish
 
 
 class DishRepository:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session=Depends(get_async_session)):
         self.session = session
 
     async def get_all_dishes_for_submenu(self, submenu_id):

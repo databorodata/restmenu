@@ -1,23 +1,50 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import update, delete
 
-from app.models import Menu
+from fastapi import Depends, HTTPException
+from sqlalchemy.future import select
+from sqlalchemy import update, delete, func
+
+from app.database import get_async_session
+from app.models import Menu, Submenu, Dish
 
 
 class MenuRepository:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session=Depends(get_async_session)):
         self.session = session
 
+    def _submenus_count_subquery(self):
+        return (
+            select(func.count(Submenu.id))
+            .where(Submenu.menu_id == Menu.id)
+            .correlate(Menu)
+            .scalar_subquery()
+            .label('submenus_count')
+        )
+
+    def _dishes_count_subquery(self):
+        return (
+            select(func.count(Dish.id))
+            .join(Submenu, Submenu.id == Dish.submenu_id)
+            .where(Submenu.menu_id == Menu.id)
+            .correlate(Menu)
+            .scalar_subquery()
+            .label('dishes_count')
+        )
+
     async def get_all_menus(self):
-        async with self.session() as session:
-            result = await session.execute(select(Menu))
-            return result.scalars().all()
+        query = select(Menu).add_columns(
+            self._submenus_count_subquery(),
+            self._dishes_count_subquery()
+        )
+        result = await self.session.execute(query)
+        return result.all()
 
     async def get_menu_by_id(self, menu_id):
-        async with self.session() as session:
-            result = await session.execute(select(Menu).where(Menu.id == menu_id))
-            return result.scalars().first()
+        query = select(Menu).add_columns(
+            self._submenus_count_subquery(),
+            self._dishes_count_subquery()
+        ).where(Menu.id == menu_id)
+        result = await self.session.execute(query)
+        return result.first()
 
     async def create_menu(self, menu_data):
         new_menu = Menu(**menu_data)
@@ -26,11 +53,16 @@ class MenuRepository:
         return new_menu
 
     async def update_menu(self, menu_id, menu_data):
-        async with self.session() as session:
-            await session.execute(update(Menu).where(Menu.id == menu_id).values(**menu_data))
-            await session.commit()
+        await self.session.execute(
+            update(Menu)
+            .where(Menu.id == menu_id)
+            .values(**menu_data)
+        )
+        await self.session.commit()
+        return  await self.get_menu_by_id(menu_id)
 
     async def delete_menu(self, menu_id):
-        async with self.session() as session:
-            await session.execute(delete(Menu).where(Menu.id == menu_id))
-            await session.commit()
+        result = await self.session.execute(delete(Menu).where(Menu.id == menu_id))
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail='Menu not found')
+        await self.session.commit()
