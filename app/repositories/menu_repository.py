@@ -1,4 +1,3 @@
-
 from fastapi import Depends, HTTPException
 from sqlalchemy.future import select
 from sqlalchemy import update, delete, func
@@ -59,7 +58,7 @@ class MenuRepository:
             .values(**menu_data)
         )
         await self.session.commit()
-        return  await self.get_menu_by_id(menu_id)
+        return await self.get_menu_by_id(menu_id)
 
     async def delete_menu(self, menu_id):
         result = await self.session.execute(delete(Menu).where(Menu.id == menu_id))

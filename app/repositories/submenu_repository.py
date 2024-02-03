@@ -1,25 +1,36 @@
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import update, delete
-
+from sqlalchemy import update, delete, func
 from app.database import get_async_session
-from app.models import Submenu
+from app.models import Submenu, Dish
 
 
 class SubmenuRepository:
     def __init__(self, session=Depends(get_async_session)):
         self.session = session
 
+    def _dishes_count_subquery(self):
+        return (
+            select(func.count(Dish.id))
+            .where(Dish.submenu_id == Submenu.id)
+            .correlate(Submenu)
+            .scalar_subquery()
+            .label('dishes_count')
+        )
+
     async def get_all_submenus_for_menu(self, menu_id):
-        async with self.session() as session:
-            result = await session.execute(select(Submenu).where(Submenu.menu_id == menu_id))
-            return result.scalars().all()
+        query = select(Submenu).add_columns(
+            self._dishes_count_subquery()
+        ).where(Submenu.menu_id == menu_id)
+        result = await self.session.execute(query)
+        return result.all()
 
     async def get_submenu_by_id(self, submenu_id):
-        async with self.session() as session:
-            result = await session.execute(select(Submenu).where(Submenu.id == submenu_id))
-            return result.scalars().first()
+        query = select(Submenu).add_columns(
+            self._dishes_count_subquery()
+        ).where(Submenu.id == submenu_id)
+        result = await self.session.execute(query)
+        return result.first()
 
     async def create_submenu(self, submenu_data):
         new_submenu = Submenu(**submenu_data)
@@ -28,11 +39,12 @@ class SubmenuRepository:
         return new_submenu
 
     async def update_submenu(self, submenu_id, submenu_data):
-        async with self.session() as session:
-            await session.execute(update(Submenu).where(Submenu.id == submenu_id).values(**submenu_data))
-            await session.commit()
+        await self.session.execute(update(Submenu)
+                                   .where(Submenu.id == submenu_id)
+                                   .values(**submenu_data))
+        await self.session.commit()
+        return await self.get_submenu_by_id(submenu_id)
 
     async def delete_submenu(self, submenu_id):
-        async with self.session() as session:
-            await session.execute(delete(Submenu).where(Submenu.id == submenu_id))
-            await session.commit()
+        await self.session.execute(delete(Submenu).where(Submenu.id == submenu_id))
+        await self.session.commit()

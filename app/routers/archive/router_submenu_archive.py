@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 logging.basicConfig(filename='redis_operations.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
-# Функция для подсчета блюд в подменю
+
 async def get_dishes_count_for_submenus(session: AsyncSession, submenu_id: uuid.UUID):
     query = select(func.count()).where(Dish.submenu_id == submenu_id).select_from(Dish)
     result = await session.execute(query)
