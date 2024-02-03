@@ -1,5 +1,4 @@
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 
@@ -12,14 +11,14 @@ class DishRepository:
         self.session = session
 
     async def get_all_dishes_for_submenu(self, submenu_id):
-        async with self.session() as session:
-            result = await session.execute(select(Dish).where(Dish.submenu_id == submenu_id))
-            return result.scalars().all()
+        query = (select(Dish).filter(Dish.submenu_id == submenu_id))
+        result = await self.session.execute(query)
+        return result.scalars().all()
 
     async def get_dish_by_id(self, dish_id):
-        async with self.session() as session:
-            result = await session.execute(select(Dish).where(Dish.id == dish_id))
-            return result.scalars().first()
+        query = (select(Dish).filter(Dish.id == dish_id))
+        result = await self.session.execute(query)
+        return result.scalars().one_or_none()
 
     async def create_dish(self, dish_data):
         new_dish = Dish(**dish_data)
@@ -28,11 +27,12 @@ class DishRepository:
         return new_dish
 
     async def update_dish(self, dish_id, dish_data):
-        async with self.session() as session:
-            await session.execute(update(Dish).where(Dish.id == dish_id).values(**dish_data))
-            await session.commit()
+        await self.session.execute(update(Dish)
+                                   .where(Dish.id == dish_id)
+                                   .values(**dish_data))
+        await self.session.commit()
+        return await self.get_dish_by_id(dish_id)
 
     async def delete_dish(self, dish_id):
-        async with self.session() as session:
-            await session.execute(delete(Dish).where(Dish.id == dish_id))
-            await session.commit()
+        await self.session.execute(delete(Dish).where(Dish.id == dish_id))
+        await self.session.commit()

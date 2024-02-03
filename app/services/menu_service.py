@@ -63,7 +63,7 @@ class MenuService:
             'submenus_count': 0,
             'dishes_count': 0
         }
-        await self.cache_repository.set(f'menu:{new_menu.id}', json.dumps(menu_cache_data), expire=60)
+        await self.cache_repository.set(f'menu:{str(new_menu.id)}', json.dumps(menu_cache_data), expire=60)
         await self.cache_repository.delete('menus:all')
         return new_menu
 

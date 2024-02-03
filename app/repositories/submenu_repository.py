@@ -48,3 +48,8 @@ class SubmenuRepository:
     async def delete_submenu(self, submenu_id):
         await self.session.execute(delete(Submenu).where(Submenu.id == submenu_id))
         await self.session.commit()
+
+
+
+
+
