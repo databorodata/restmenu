@@ -10,6 +10,8 @@ class CreateEditMenuModel(BaseModel):
 
 class MenuModel(CreateEditMenuModel):
     id: uuid.UUID
+    submenus_count: int
+    dishes_count: int
 
 
 class CreateEditSubmenuModel(BaseModel):
@@ -19,6 +21,7 @@ class CreateEditSubmenuModel(BaseModel):
 
 class SubmenuModel(CreateEditSubmenuModel):
     id: uuid.UUID
+    dishes_count: int
 
 
 class CreateEditDishModel(BaseModel):

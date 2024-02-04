@@ -2,8 +2,6 @@ from typing import AsyncGenerator
 
 import aioredis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-
-# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from config import (
@@ -24,17 +22,19 @@ engine = create_async_engine(DATABASE_URL)
 async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
-async def get_redis_connection():
-    # Создаём экземпляр Redis с пулом соединений
+async def get_redis_connection() -> aioredis.Redis:
+    """Создание соединения с Redis."""
     redis = aioredis.from_url(f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}', encoding='utf-8', decode_responses=True)
     return redis
 
 
-async def create_db_and_tables():
+async def create_db_and_tables() -> None:
+    """Создание базы данных и таблиц при запуске."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """Получение асинхронной сессии для работы с базой данных."""
     async with async_session_maker() as session:
         yield session

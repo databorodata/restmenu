@@ -1,48 +1,56 @@
-from uuid import UUID
 import json
+from uuid import UUID
 
 from fastapi import HTTPException
 
-from app.repositories.menu_repository import MenuRepository
 from app.repositories.cache_repository import CacheRepository
+from app.repositories.menu_repository import MenuRepository
+
 
 class MenuService:
-    def __init__(self, menu_repository: MenuRepository, cache_repository: CacheRepository):
+    def __init__(
+            self,
+            menu_repository: MenuRepository,
+            cache_repository: CacheRepository
+    ) -> None:
+        """Инициализация сервиса для работы с меню."""
         self.menu_repository = menu_repository
         self.cache_repository = cache_repository
 
-    async def get_menus(self):
+    async def get_menus(self) -> list[dict]:
+        """Возвращает список всех меню с кэшированием."""
         cache_key = 'menus:all'
         cached_menus = await self.cache_repository.get(cache_key)
 
         if cached_menus:
             return json.loads(cached_menus)
-        else:
-            menus_data = await self.menu_repository.get_all_menus()
-            menus_list = [
-                {
-                    'id': str(menu.Menu.id),
-                    'title': menu.Menu.title,
-                    'description': menu.Menu.description,
-                    'submenus_count': menu.submenus_count,
-                    'dishes_count': menu.dishes_count
-                }
-                for menu in menus_data
-            ]
 
-            await self.cache_repository.set(cache_key, json.dumps(menus_list), expire=60)
-            return menus_list
+        menus_data = await self.menu_repository.get_all_menus()
+        menus_list = [
+            {
+                'id': str(menu.Menu.id),
+                'title': menu.Menu.title,
+                'description': menu.Menu.description,
+                'submenus_count': menu.submenus_count,
+                'dishes_count': menu.dishes_count
+            }
+            for menu in menus_data
+        ]
 
-    async def get_menu(self, menu_id: UUID):
+        await self.cache_repository.set(cache_key, json.dumps(menus_list), expire=60)
+        return menus_list
+
+    async def get_menu(self, menu_id: UUID) -> dict:
+        """Возвращает детали меню по ID с кэшированием."""
         cache_key = f'menu:{menu_id}'
         cached_menu = await self.cache_repository.get(cache_key)
+
         if cached_menu:
             return json.loads(cached_menu)
 
         menu_data = await self.menu_repository.get_menu_by_id(menu_id)
-
         if menu_data is None:
-            raise HTTPException(status_code=404, detail="menu not found")
+            raise HTTPException(status_code=404, detail='menu not found')
 
         menu = {
             'id': str(menu_data.Menu.id),
@@ -54,7 +62,8 @@ class MenuService:
         await self.cache_repository.set(cache_key, json.dumps(menu), expire=60)
         return menu
 
-    async def create_menu(self, menu_data):
+    async def create_menu(self, menu_data: dict) -> dict:
+        """Создает новое меню и обновляет кэш."""
         new_menu = await self.menu_repository.create_menu(menu_data)
         menu_cache_data = {
             'id': str(new_menu.id),
@@ -65,12 +74,13 @@ class MenuService:
         }
         await self.cache_repository.set(f'menu:{str(new_menu.id)}', json.dumps(menu_cache_data), expire=60)
         await self.cache_repository.delete('menus:all')
-        return new_menu
+        return menu_cache_data
 
-    async def update_menu(self, menu_id: UUID, menu_data):
+    async def update_menu(self, menu_id: UUID, menu_data: dict) -> dict:
+        """Обновляет существующее меню и кэш."""
         updated_menu = await self.menu_repository.update_menu(menu_id, menu_data)
         if updated_menu is None:
-            raise HTTPException(status_code=404, detail="menu not found")
+            raise HTTPException(status_code=404, detail='menu not found')
 
         new_menu_data = {
             'id': str(updated_menu.Menu.id),
@@ -79,15 +89,15 @@ class MenuService:
             'submenus_count': updated_menu.submenus_count,
             'dishes_count': updated_menu.dishes_count
         }
-
         await self.cache_repository.set(f'menu:{menu_id}', json.dumps(new_menu_data), expire=60)
         await self.cache_repository.delete('menus:all')
 
         return new_menu_data
 
-
-    async def delete_menu(self, menu_id: UUID):
+    async def delete_menu(self, menu_id: UUID) -> dict[str, str]:
+        """Удаляет меню и связанный с ним кэш."""
         await self.menu_repository.delete_menu(menu_id)
         await self.cache_repository.delete_pattern(f'menu:{menu_id}*')
         await self.cache_repository.delete('menus:all')
+
         return {'detail': 'menu deleted'}
