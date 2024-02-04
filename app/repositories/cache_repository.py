@@ -12,7 +12,10 @@ class CacheRepository:
 
     async def set(self, key: str, value: str, expire: int | None = None) -> None:
         """Установка значения по ключу в Redis с опциональным временем истечения."""
-        await self.redis.set(key, value, ex=expire)
+        if expire is not None:
+            await self.redis.set(key, value, ex=expire)
+        else:
+            await self.redis.set(key, value)
 
     async def delete(self, key: str) -> None:
         """Удаление значения по ключу из Redis."""
@@ -20,8 +23,10 @@ class CacheRepository:
 
     async def delete_pattern(self, pattern: str) -> None:
         """Удаление значений по шаблону ключа из Redis."""
-        cursor = '0'
-        while cursor != 0:
+        has_next = True
+        cursor = 0
+        while has_next:
             cursor, keys = await self.redis.scan(cursor=cursor, match=pattern, count=100)
             if keys:
                 await self.redis.delete(*keys)
+            has_next = (cursor != 0)

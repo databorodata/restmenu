@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Any, Sequence
 from uuid import UUID
 
 from fastapi import Depends, HTTPException
@@ -14,7 +14,7 @@ class SubmenuRepository:
         """Инициализация репозитория подменю с сессией базы данных."""
         self.session = session
 
-    def _dishes_count_subquery(self) -> func:
+    def _dishes_count_subquery(self) -> Any:
         """Возвращает подзапрос для подсчета блюд."""
         return (
             select(func.count(Dish.id))
