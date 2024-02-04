@@ -56,9 +56,7 @@ Python 3.10, PostgreSQL
    ```bash
    cd /project/path
 
-2. Создайте файл .env на основе .env_template и заполните необходимые переменные окружения (POSTGRES_HOST, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER).
-
-3. Чтобы запустить приложение, используйте следующую команду в вашем терминале
+2. Чтобы запустить приложение, используйте следующую команду в вашем терминале
 
    ```bash
    docker-compose up -d
@@ -70,10 +68,7 @@ Python 3.10, PostgreSQL
    ```bash
    cd /project/path
 
-2. Создайте файл .env.test на основе .env_template и заполните необходимые переменные окружения (POSTGRES_HOST, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER).
-
-
-3. Чтобы запустить тест для приложения, используйте следующую команду в вашем терминале
+2. Чтобы запустить тест для приложения, используйте следующую команду в вашем терминале
 
    ```bash
    docker-compose -f docker-compose-tests.yml up
