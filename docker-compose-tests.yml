@@ -7,16 +7,27 @@ services:
     depends_on:
       test_db:
         condition: service_healthy
+      test_redis:
+        condition: service_healthy
     restart: on-failure
     env_file: .env.test
     environment:
       - POSTGRES_HOST=test_db
+      - REDIS_HOST=test_redis
 
   test_db:
     image: postgres:15.1-alpine
     env_file: .env.test
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 15s
+      timeout: 40s
+      retries: 4
+
+  test_redis:
+    image: redis:6.0-alpine
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
       interval: 15s
       timeout: 40s
       retries: 4
