@@ -17,9 +17,6 @@ TEST_DB_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB
 
 engine = create_async_engine(TEST_DB_URL, poolclass=NullPool)
 async_session_maker = async_sessionmaker(bind=engine, expire_on_commit=False)
-#
-# engine = create_async_engine(TEST_DB_URL, poolclass=NullPool)
-# async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 @pytest.fixture(scope='session')
