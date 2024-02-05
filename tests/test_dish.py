@@ -1,45 +1,41 @@
 import uuid
-from typing import Tuple
+from typing import AsyncGenerator
 
 import pytest
-
 from httpx import AsyncClient
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Menu, Submenu, Dish
+from app.models import Dish, Menu, Submenu
 from app.repositories.dish_repository import DishRepository
-from app.repositories.submenu_repository import SubmenuRepository
 from app.repositories.menu_repository import MenuRepository
+from app.repositories.submenu_repository import SubmenuRepository
 from app.routers.router_dish import router as router_dish
 from app.routers.router_menu import router as router_menu
 from app.routers.router_submenu import router as router_submenu
 
-from tests.conftest import client, db_session
-
 
 class TestDishAPI:
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope='function')
     async def create_dish_fixture(
             self,
             client: AsyncClient,
             menu_repo: MenuRepository,
             submenu_repo: SubmenuRepository,
             dish_repo: DishRepository
-    ) -> Tuple[Menu, Submenu, Dish]:
+    ) -> AsyncGenerator[tuple[Menu, Submenu, Dish], None]:
         """Фикстура для создания блюда для тестирования."""
         new_menu = await menu_repo.create_menu({
-            "title": 'menu 1',
-            "description": 'description 1',
-            "id": uuid.uuid4()
+            'title': 'menu 1',
+            'description': 'description 1',
+            'id': uuid.uuid4()
         })
 
         new_submenu = await submenu_repo.create_submenu({
             'title': 'Test Submenu',
             'description': 'Test Submenu Description',
             'menu_id': new_menu.id,
-            "id": uuid.uuid4()
+            'id': uuid.uuid4()
         })
 
         new_dish = await dish_repo.create_dish({
@@ -48,7 +44,7 @@ class TestDishAPI:
             'price': '42.42',
             'menu_id': new_menu.id,
             'submenu_id': new_submenu.id,
-            "id": uuid.uuid4()
+            'id': uuid.uuid4()
         })
 
         yield new_menu, new_submenu, new_dish

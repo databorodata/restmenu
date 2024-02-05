@@ -1,11 +1,9 @@
 import pytest
 from httpx import AsyncClient
 
-from tests.conftest import client
-
 from app.repositories.dish_repository import DishRepository
-from app.repositories.submenu_repository import SubmenuRepository
 from app.repositories.menu_repository import MenuRepository
+from app.repositories.submenu_repository import SubmenuRepository
 from app.routers.router_dish import router as router_dish
 from app.routers.router_menu import router as router_menu
 from app.routers.router_submenu import router as router_submenu

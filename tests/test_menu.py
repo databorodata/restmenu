@@ -1,28 +1,27 @@
 import uuid
+from typing import AsyncGenerator
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models import Menu
 from app.repositories.menu_repository import MenuRepository
 from app.routers.router_menu import router as router_menu
-from tests.conftest import client, db_session
-
-from app.models import Menu
 
 
 class TestMenuAPI:
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope='function')
     async def create_menu_fixture(
             self,
             client: AsyncClient,
             menu_repo: MenuRepository
-    ) -> Menu:
+    ) -> AsyncGenerator[Menu, None]:
         """Фикстура для создания меню для тестирования."""
         new_menu = await menu_repo.create_menu({
-            "title": 'menu 1',
-            "description": 'description 1',
-            "id": uuid.uuid4()
+            'title': 'menu 1',
+            'description': 'description 1',
+            'id': uuid.uuid4()
         })
         yield new_menu
 
