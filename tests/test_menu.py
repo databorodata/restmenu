@@ -12,30 +12,26 @@ from tests.conftest import client, db_session
 
 class TestMenuAPI:
 
-    async def test_menu_create(self, db_session: AsyncSession, client: AsyncClient):
-        data = {'title': 'Test Menu', 'description': 'Test Description'}
+    async def test_menu_create(self, client: AsyncClient, menu_repo: MenuRepository):
+        data = {'title': 'menu 1', 'description': 'description 1'}
         response = await client.post(router_menu.url_path_for('create_menu'), json=data)
 
-        query = (select(Menu).filter(Menu.id == response.json()['id']))
-        result = await db_session.execute(query)
-        menu = result.scalars().one_or_none()
+        menu_id = response.json()['id']
+        menu = await menu_repo.get_menu_by_id(menu_id)
 
         assert menu is not None
         assert response.status_code == 201
-        assert response.json()['id'] == str(menu.id)
-        assert response.json()['title'] == menu.title
-        assert response.json()['description'] == menu.description
-        assert response.json()['submenus_count'] == 0
-        assert response.json()['dishes_count'] == 0
+        assert response.json()['id'] == str(menu.Menu.id)
+        assert response.json()['title'] == menu.Menu.title
+        assert response.json()['description'] == menu.Menu.description
+        assert response.json()['submenus_count'] == menu.submenus_count
+        assert response.json()['dishes_count'] == menu.dishes_count
 
-    async def test_get_menu(self, db_session: AsyncSession, client: AsyncClient):
-        # repo = MenuRepository(db_session)
-        # new_menu = await repo.create_menu({})
-        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
-        db_session.add(new_menu)
-        await db_session.commit()
+    async def test_get_menu(self, client: AsyncClient, menu_repo: MenuRepository):
+        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
 
         response = await client.get(router_menu.url_path_for('get_menu', menu_id=str(new_menu.id)))
+
         assert response.status_code == 200
         assert response.json()['id'] == str(new_menu.id)
         assert response.json()['title'] == new_menu.title
@@ -43,37 +39,32 @@ class TestMenuAPI:
         assert response.json()['submenus_count'] == 0
         assert response.json()['dishes_count'] == 0
 
-    async def test_menu_update(self, db_session: AsyncSession, client: AsyncClient):
-        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
-        db_session.add(new_menu)
-        await db_session.commit()
+    async def test_menu_update(self, db_session: AsyncSession, client: AsyncClient, menu_repo: MenuRepository):
+        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
 
         update_data = {'title': 'menu 1 update', 'description': 'description 1 update'}
-        response = await client.patch(router_menu.url_path_for('update_menu', menu_id=str(new_menu.id)), json=update_data)
+        response = await client.patch(router_menu.url_path_for('update_menu', menu_id=str(new_menu.id)),
+                                      json=update_data)
         await db_session.refresh(new_menu)
 
-        query = (select(Menu).filter(Menu.id == new_menu.id))
-        result = await db_session.execute(query)
-        menu = result.scalars().one_or_none()
+        menu = await menu_repo.get_menu_by_id(new_menu.id)
 
+        print(response.json()['title'], menu.Menu.title)
+        print(response.json()['description'], menu.Menu.description)
         assert menu is not None
         assert response.status_code == 200
-        assert response.json()['id'] == str(menu.id)
-        assert response.json()['title'] == menu.title
-        assert response.json()['description'] == menu.description
-        assert response.json()['submenus_count'] == 0
-        assert response.json()['dishes_count'] == 0
+        assert response.json()['id'] == str(menu.Menu.id)
+        assert response.json()['title'] == menu.Menu.title
+        assert response.json()['description'] == menu.Menu.description
+        assert response.json()['submenus_count'] == menu.submenus_count
+        assert response.json()['dishes_count'] == menu.dishes_count
 
-    async def test_menu_delete(self, db_session: AsyncSession, client: AsyncClient):
-        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
-        db_session.add(new_menu)
-        await db_session.commit()
+    async def test_menu_delete(self, client: AsyncClient, menu_repo: MenuRepository):
+        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
 
         response = await client.delete(router_menu.url_path_for('delete_menu', menu_id=str(new_menu.id)))
         assert response.json()['detail'] == 'menu deleted'
 
-        query = (select(Menu).filter(Menu.id == new_menu.id))
-        result = await db_session.execute(query)
-        menu_deleted = result.scalars().one_or_none()
+        menu_deleted = await menu_repo.get_menu_by_id(new_menu.id)
 
         assert menu_deleted is None

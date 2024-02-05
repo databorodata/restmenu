@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.database import Base
 from app.main import app
+from app.repositories.dish_repository import DishRepository
+from app.repositories.menu_repository import MenuRepository
+from app.repositories.submenu_repository import SubmenuRepository
 from config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 
 TEST_DB_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
@@ -47,3 +50,18 @@ async def db_session():
 async def client(init_db):
     async with AsyncClient(app=app, base_url='http://test') as client:
         yield client
+
+
+@pytest_asyncio.fixture
+async def menu_repo(db_session):
+    yield MenuRepository(db_session)
+
+
+@pytest_asyncio.fixture
+async def submenu_repo(db_session):
+    yield SubmenuRepository(db_session)
+
+
+@pytest_asyncio.fixture
+async def dish_repo(db_session):
+    yield DishRepository(db_session)

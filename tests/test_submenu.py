@@ -1,83 +1,77 @@
 import uuid
 
 from httpx import AsyncClient
-from sqlalchemy import select
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Menu, Submenu
-from tests.conftest import client
+from app.repositories.submenu_repository import SubmenuRepository
+from app.repositories.menu_repository import MenuRepository
+from app.routers.router_menu import router as router_menu
+from app.routers.router_submenu import router as router_submenu
+from tests.conftest import client, db_session
 
 
 class TestSubmenuAPI:
 
-    async def test_submenu_create(self, db_session: AsyncSession, client: AsyncClient):
-        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
-        db_session.add(new_menu)
-        await db_session.commit()
+    async def test_submenu_create(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
+        data_menu = {'title': 'menu 1', 'description': 'description 1'}
+        response_menu = await client.post(router_menu.url_path_for('create_menu'), json=data_menu)
+        menu_id = response_menu.json()['id']
 
         data_submenu = {'title': 'Test Submenu', 'description': 'Test Submenu Description'}
-        response_submenu = await client.post(f'/api/v1/menus/{new_menu.id}/submenus/', json=data_submenu)
+        response_submenu = await client.post(router_submenu.url_path_for('create_submenu', menu_id=menu_id), json=data_submenu)
+        submenu_id = response_submenu.json()['id']
 
-        query = (select(Submenu).filter(Submenu.id == response_submenu.json()['id']))
-        result = await db_session.execute(query)
-        submenu = result.scalars().one_or_none()
+        submenu = await submenu_repo.get_submenu_by_id(submenu_id)
 
         assert submenu is not None
         assert response_submenu.status_code == 201
-        assert response_submenu.json()['id'] == str(submenu.id)
-        assert response_submenu.json()['title'] == submenu.title
-        assert response_submenu.json()['description'] == submenu.description
+        assert response_submenu.json()['id'] == str(submenu.Submenu.id)
+        assert response_submenu.json()['title'] == submenu.Submenu.title
+        assert response_submenu.json()['description'] == submenu.Submenu.description
         assert response_submenu.json()['dishes_count'] == 0
 
-    async def test_get_submenu(self, db_session: AsyncSession, client: AsyncClient):
-        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
-        new_submenu = Submenu(title='submenu 1', description='description 1', id=uuid.uuid4(), menu_id=new_menu.id)
-        db_session.add(new_menu)
-        db_session.add(new_submenu)
-        await db_session.commit()
+    async def test_get_submenu(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
+        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
+        new_submenu = await submenu_repo.create_submenu({'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id, "id": uuid.uuid4()})
 
-        response = await client.get(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}')
+        response = await client.get(router_submenu.url_path_for('get_submenu', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id)))
+
         assert response.status_code == 200
         assert response.json()['id'] == str(new_submenu.id)
         assert response.json()['title'] == new_submenu.title
         assert response.json()['description'] == new_submenu.description
         assert response.json()['dishes_count'] == 0
 
-    async def test_submenu_update(self, db_session: AsyncSession, client: AsyncClient):
-        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
-        new_submenu = Submenu(title='submenu 1', description='description 1', id=uuid.uuid4(), menu_id=new_menu.id)
-        db_session.add(new_menu)
-        db_session.add(new_submenu)
-        await db_session.commit()
+    async def test_submenu_update(self, db_session: AsyncSession, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
+        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
+        new_submenu = await submenu_repo.create_submenu(
+            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
+             "id": uuid.uuid4()})
 
         update_data = {'title': 'submenu 1 update', 'description': 'description 1 update'}
-        response = await client.patch(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}', json=update_data)
+        response = await client.patch(router_submenu.url_path_for('update_submenu', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id)), json=update_data)
         await db_session.refresh(new_submenu)
 
-        query = (select(Submenu).filter(Submenu.id == response.json()['id']))
-        result = await db_session.execute(query)
-        submenu = result.scalars().one_or_none()
+        submenu = await submenu_repo.get_submenu_by_id(new_submenu.id)
 
         assert submenu is not None
         assert response.status_code == 200
-        assert response.json()['id'] == str(submenu.id)
-        assert response.json()['title'] == submenu.title
-        assert response.json()['description'] == submenu.description
+        assert response.json()['id'] == str(submenu.Submenu.id)
+        assert response.json()['title'] == submenu.Submenu.title
+        assert response.json()['description'] == submenu.Submenu.description
         assert response.json()['dishes_count'] == 0
 
-    async def test_submenu_delete(self, db_session: AsyncSession, client: AsyncClient):
-        new_menu = Menu(title='menu 1', description='description 1', id=uuid.uuid4())
-        new_submenu = Submenu(title='submenu 1', description='description 1', id=uuid.uuid4(), menu_id=new_menu.id)
-        db_session.add(new_menu)
-        db_session.add(new_submenu)
-        await db_session.commit()
+    async def test_submenu_delete(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
+        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
+        new_submenu = await submenu_repo.create_submenu(
+            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
+             "id": uuid.uuid4()})
 
-        response = await client.delete(f'/api/v1/menus/{str(new_menu.id)}/submenus/{str(new_submenu.id)}')
+        response = await client.delete(router_submenu.url_path_for('delete_submenu', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id)))
 
         assert response.json()['detail'] == 'submenu deleted'
 
-        query = (select(Submenu).filter(Submenu.id == new_submenu.id))
-        result = await db_session.execute(query)
-        submenu_deleted = result.scalars().one_or_none()
+        submenu_deleted = await submenu_repo.get_submenu_by_id(new_submenu.id)
 
         assert submenu_deleted is None
