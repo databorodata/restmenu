@@ -19,8 +19,6 @@ services:
   db:
     image: postgres:15.1-alpine
     env_file: .env
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
 
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
@@ -35,7 +33,3 @@ services:
       interval: 15s
       timeout: 40s
       retries: 4
-
-
-volumes:
-  postgres_data:
