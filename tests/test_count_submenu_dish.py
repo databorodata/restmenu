@@ -10,6 +10,7 @@ from app.routers.router_dish import router as router_dish
 from app.routers.router_menu import router as router_menu
 from app.routers.router_submenu import router as router_submenu
 
+
 class TestCountSubmenuDishAPI:
     menu_id = None
     submenu_id = None

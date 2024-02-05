@@ -1,5 +1,7 @@
 import uuid
 
+import pytest
+
 from httpx import AsyncClient
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +17,20 @@ from tests.conftest import client, db_session
 
 
 class TestDishAPI:
+
+    @pytest.fixture(scope="function")
+    async def create_dish_fixture(self, client: AsyncClient, menu_repo: MenuRepository,
+                                         submenu_repo: SubmenuRepository, dish_repo: DishRepository):
+        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
+        new_submenu = await submenu_repo.create_submenu(
+            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
+             "id": uuid.uuid4()})
+        new_dish = await dish_repo.create_dish(
+            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'price': '42.42',
+             'menu_id': new_menu.id, 'submenu_id': new_submenu.id,
+             "id": uuid.uuid4()})
+
+        yield new_menu, new_submenu, new_dish
 
     async def test_dish_create(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository, dish_repo: DishRepository):
         data_menu = {'title': 'menu 1', 'description': 'description 1'}
@@ -40,14 +56,9 @@ class TestDishAPI:
         assert response_dish.json()['description'] == dish.description
         assert response_dish.json()['price'] == '42.42'
 
-    async def test_get_dish(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository, dish_repo: DishRepository):
-        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
-        new_submenu = await submenu_repo.create_submenu(
-            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
-             "id": uuid.uuid4()})
-        new_dish = await dish_repo.create_dish(
-            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'price': '42.42', 'menu_id': new_menu.id, 'submenu_id': new_submenu.id,
-             "id": uuid.uuid4()})
+    @pytest.mark.usefixtures('create_dish_fixture')
+    async def test_get_dish(self, client: AsyncClient, create_dish_fixture):
+        new_menu, new_submenu, new_dish = create_dish_fixture
 
         response = await client.get(router_dish.url_path_for('get_dish', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id), dish_id=str(new_dish.id)))
 
@@ -57,15 +68,9 @@ class TestDishAPI:
         assert response.json()['description'] == new_dish.description
         assert response.json()['price'] == new_dish.price
 
-    async def test_dish_update(self, db_session: AsyncSession, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository, dish_repo: DishRepository):
-        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
-        new_submenu = await submenu_repo.create_submenu(
-            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
-             "id": uuid.uuid4()})
-        new_dish = await dish_repo.create_dish(
-            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'price': '42.42',
-             'menu_id': new_menu.id, 'submenu_id': new_submenu.id,
-             "id": uuid.uuid4()})
+    @pytest.mark.usefixtures('create_dish_fixture')
+    async def test_dish_update(self, db_session: AsyncSession, client: AsyncClient, dish_repo: DishRepository, create_dish_fixture):
+        new_menu, new_submenu, new_dish = create_dish_fixture
 
         update_data = {'title': 'submenu 1 update', 'description': 'description 1 update', 'price': '20.24'}
         response = await client.patch(
@@ -82,20 +87,12 @@ class TestDishAPI:
         assert response.json()['description'] == dish.description
         assert response.json()['price'] == dish.price
 
-    async def test_dish_delete(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository, dish_repo: DishRepository):
-        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
-        new_submenu = await submenu_repo.create_submenu(
-            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
-             "id": uuid.uuid4()})
-        new_dish = await dish_repo.create_dish(
-            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'price': '42.42',
-             'menu_id': new_menu.id, 'submenu_id': new_submenu.id,
-             "id": uuid.uuid4()})
+    @pytest.mark.usefixtures('create_dish_fixture')
+    async def test_dish_delete(self, client: AsyncClient, dish_repo: DishRepository, create_dish_fixture):
+        new_menu, new_submenu, new_dish = create_dish_fixture
 
         response = await client.delete(router_dish.url_path_for('delete_dish', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id), dish_id=str(new_dish.id)))
-
         assert response.json()['detail'] == 'dish deleted'
 
         dish_deleted = await dish_repo.get_dish_by_id(new_dish.id)
-
         assert dish_deleted is None

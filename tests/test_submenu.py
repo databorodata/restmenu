@@ -1,5 +1,7 @@
 import uuid
 
+import pytest
+
 from httpx import AsyncClient
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,10 +10,19 @@ from app.repositories.submenu_repository import SubmenuRepository
 from app.repositories.menu_repository import MenuRepository
 from app.routers.router_menu import router as router_menu
 from app.routers.router_submenu import router as router_submenu
+
 from tests.conftest import client, db_session
 
 
 class TestSubmenuAPI:
+
+    @pytest.fixture(scope="function")
+    async def create_submenu_fixture(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
+        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
+        new_submenu = await submenu_repo.create_submenu(
+            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
+             "id": uuid.uuid4()})
+        yield new_menu, new_submenu
 
     async def test_submenu_create(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
         data_menu = {'title': 'menu 1', 'description': 'description 1'}
@@ -31,9 +42,9 @@ class TestSubmenuAPI:
         assert response_submenu.json()['description'] == submenu.Submenu.description
         assert response_submenu.json()['dishes_count'] == 0
 
-    async def test_get_submenu(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
-        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
-        new_submenu = await submenu_repo.create_submenu({'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id, "id": uuid.uuid4()})
+    @pytest.mark.usefixtures('create_submenu_fixture')
+    async def test_get_submenu(self, client: AsyncClient, create_submenu_fixture):
+        new_menu, new_submenu = create_submenu_fixture
 
         response = await client.get(router_submenu.url_path_for('get_submenu', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id)))
 
@@ -43,11 +54,9 @@ class TestSubmenuAPI:
         assert response.json()['description'] == new_submenu.description
         assert response.json()['dishes_count'] == 0
 
-    async def test_submenu_update(self, db_session: AsyncSession, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
-        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
-        new_submenu = await submenu_repo.create_submenu(
-            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
-             "id": uuid.uuid4()})
+    @pytest.mark.usefixtures('create_submenu_fixture')
+    async def test_submenu_update(self, db_session: AsyncSession, client: AsyncClient, submenu_repo: SubmenuRepository, create_submenu_fixture):
+        new_menu, new_submenu = create_submenu_fixture
 
         update_data = {'title': 'submenu 1 update', 'description': 'description 1 update'}
         response = await client.patch(router_submenu.url_path_for('update_submenu', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id)), json=update_data)
@@ -62,16 +71,12 @@ class TestSubmenuAPI:
         assert response.json()['description'] == submenu.Submenu.description
         assert response.json()['dishes_count'] == 0
 
-    async def test_submenu_delete(self, client: AsyncClient, menu_repo: MenuRepository, submenu_repo: SubmenuRepository):
-        new_menu = await menu_repo.create_menu({"title": 'menu 1', "description": 'description 1', "id": uuid.uuid4()})
-        new_submenu = await submenu_repo.create_submenu(
-            {'title': 'Test Submenu', 'description': 'Test Submenu Description', 'menu_id': new_menu.id,
-             "id": uuid.uuid4()})
+    @pytest.mark.usefixtures('create_submenu_fixture')
+    async def test_submenu_delete(self, client: AsyncClient, submenu_repo: SubmenuRepository, create_submenu_fixture):
+        new_menu, new_submenu = create_submenu_fixture
 
         response = await client.delete(router_submenu.url_path_for('delete_submenu', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id)))
-
         assert response.json()['detail'] == 'submenu deleted'
 
         submenu_deleted = await submenu_repo.get_submenu_by_id(new_submenu.id)
-
         assert submenu_deleted is None
