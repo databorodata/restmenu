@@ -74,6 +74,7 @@ Python 3.10, PostgreSQL
    docker-compose -f docker-compose-tests.yml up
    ```
 
+
 ### Задание "Реализовать вывод количества подменю и блюд для Меню через один (сложный) ORM запрос."
 
 

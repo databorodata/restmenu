@@ -24,6 +24,7 @@ services:
       timeout: 40s
       retries: 4
 
+
   test_redis:
     image: redis:6.0-alpine
     healthcheck:

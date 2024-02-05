@@ -36,5 +36,6 @@ services:
       timeout: 40s
       retries: 4
 
+
 volumes:
   postgres_data:
