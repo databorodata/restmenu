@@ -6,12 +6,12 @@ from httpx import AsyncClient
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from app.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 from app.database import Base
 from app.main import app
 from app.repositories.dish_repository import DishRepository
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.submenu_repository import SubmenuRepository
-from config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 
 TEST_DB_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
