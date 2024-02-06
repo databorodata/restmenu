@@ -53,7 +53,7 @@ class TestDishAPI:
             menu_repo: MenuRepository,
             submenu_repo: SubmenuRepository,
             dish_repo: DishRepository
-    ):
+    ) -> None:
         """Тест создает блюдо и ожидает успех."""
         data_menu = {'title': 'menu 1', 'description': 'description 1'}
         response_menu = await client.post(
@@ -89,8 +89,8 @@ class TestDishAPI:
     async def test_when_get_dish_then_details_correct(
             self,
             client: AsyncClient,
-            create_dish_fixture
-    ):
+            create_dish_fixture: tuple[Menu, Submenu, Dish],
+    ) -> None:
         """Тест получает детали блюда и ожидает корректные данные."""
         new_menu, new_submenu, new_dish = create_dish_fixture
 
@@ -110,8 +110,8 @@ class TestDishAPI:
             db_session: AsyncSession,
             client: AsyncClient,
             dish_repo: DishRepository,
-            create_dish_fixture
-    ):
+            create_dish_fixture: tuple[Menu, Submenu, Dish]
+    ) -> None:
         """Тест обновляет блюдо и проверяет, что детали изменены."""
         new_menu, new_submenu, new_dish = create_dish_fixture
 
@@ -145,8 +145,8 @@ class TestDishAPI:
             self,
             client: AsyncClient,
             dish_repo: DishRepository,
-            create_dish_fixture
-    ):
+            create_dish_fixture: tuple[Menu, Submenu, Dish]
+    ) -> None:
         """Тест удаляет блюдо и проверяет, что оно удалено."""
         new_menu, new_submenu, new_dish = create_dish_fixture
 

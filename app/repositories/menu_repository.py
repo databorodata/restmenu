@@ -54,14 +54,14 @@ class MenuRepository:
         result = await self.session.execute(query)
         return result.first()
 
-    async def create_menu(self, menu_data: dict) -> Menu:
+    async def create_menu(self, menu_data: dict[str, Any]) -> Menu:
         """Создает и возвращает новое меню."""
         new_menu = Menu(**menu_data)
         self.session.add(new_menu)
         await self.session.commit()
         return new_menu
 
-    async def update_menu(self, menu_id: UUID, menu_data: dict) -> Row:
+    async def update_menu(self, menu_id: UUID, menu_data: dict[str, Any]) -> Row:
         """Обновляет и возвращает обновленное меню."""
         await self.session.execute(
             update(Menu)

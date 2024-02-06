@@ -1,4 +1,3 @@
-from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -8,7 +7,7 @@ from app.database import get_async_session, get_redis_connection
 from app.repositories.cache_repository import CacheRepository
 from app.repositories.menu_repository import MenuRepository
 from app.schemas import CreateEditMenuModel, MenuModel
-from app.services.menu_service import MenuService
+from app.services.menu_service import MenuDict, MenuService
 
 router = APIRouter(
     prefix='/api/v1/menus',
@@ -26,107 +25,143 @@ def get_menu_service(
     return MenuService(menu_repository=menu_repository, cache_repository=cache_repository)
 
 
-# @router.get('/', status_code=200, response_model=list[MenuModel], summary="Получить список меню")
+def convert_menu(menu: MenuDict) -> MenuModel:
+    return MenuModel.model_validate(menu, from_attributes=True)
+
+
 @router.get(
     '/menus/',
     summary='Получить список меню',
     response_description='Список всех меню',
     response_model=list[MenuModel],
     responses={
-        200: {
-            'description': 'Список меню успешно получен',
-            'content': {
-                'application/json': {
-                    'examples': {
-                        'normal': {
-                            'summary': 'Пример списка меню',
-                            'value': [
-                                {
-                                    'id': 'a2eb416c-2245-4526-bb4b-6343d5c5016f',
-                                    'title': 'My menu 1',
-                                    'description': 'My menu description 1',
-                                    'submenus_count': 0,
-                                    'dishes_count': 0
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        }
-    }
+        200: {'description': 'Список меню успешно получен'}
+    },
 )
-async def get_menus(menu_service: MenuService = Depends(get_menu_service)) -> list[dict]:
+async def get_menus(menu_service: MenuService = Depends(get_menu_service)) -> list[MenuModel]:
     """Возвращает список всех доступных меню в системе."""
-    return await menu_service.get_menus()
+    menus = await menu_service.get_menus()
+    return [convert_menu(it) for it in menus]
 
 
-# @router.get('/{menu_id}', status_code=200, response_model=MenuModel, summary="Получить детали меню")
+# @router.get('/{menu_id}', status_code=200, response_model=MenuModel, summary='Получить детали меню')
 @router.get(
-    '/{item_id}',
+    '/{menu_id}',
+    summary='Получить детали меню',
+    response_description='Детали меню',
+    response_model=MenuModel,
     responses={
-        200: {'description': 'Успешное получение деталей элемента'},
+        200: {'description': 'Успешное получение деталей меню'},
         404: {
-            'description': 'Элемент не найден',
+            'description': 'Меню не найдено',
             'content': {
                 'application/json': {
-                    'example': {'detail': 'Элемент с указанным ID не найден'}
+                    'example': {'detail': 'menu not found'}
                 }
             },
         },
     },
-    tags=['Items'],
-    summary='Получить детали элемента'
 )
 async def get_menu(
     menu_id: UUID,
     menu_service: MenuService = Depends(get_menu_service)
-) -> dict[str, Any]:
+) -> MenuModel:
     """
     Возвращает детали меню по его уникальному идентификатору.
 
     - **menu_id**: UUID меню для получения информации.
     """
 
-    return await menu_service.get_menu(menu_id)
+    menu = await menu_service.get_menu(menu_id)
+    return convert_menu(menu)
 
 
-@router.post('/', status_code=201, response_model=MenuModel, summary='Создать новое меню')
+@router.post(
+    '/',
+    status_code=201,
+    response_model=MenuModel,
+    response_description='Успешно созданное меню',
+    summary='Создать новое меню',
+    responses={
+        201: {'description': 'Созданное меню'},
+    }
+)
 async def create_menu(
-        menu_data: CreateEditMenuModel,
-        menu_service: MenuService = Depends(get_menu_service)
-) -> dict:
+    menu_data: CreateEditMenuModel,
+    menu_service: MenuService = Depends(get_menu_service)
+) -> MenuModel:
     """
     Создает новое меню с указанными данными.
 
     - **menu_data**: данные для создания меню.
     """
-    return await menu_service.create_menu(menu_data.model_dump())
+    menu = await menu_service.create_menu(menu_data.model_dump())
+    return convert_menu(menu)
 
 
-@router.patch('/{menu_id}', response_model=MenuModel, summary='Обновить меню')
+@router.patch(
+    '/{menu_id}',
+    response_model=MenuModel,
+    response_description='Успешно обновленное меню',
+    summary='Обновить меню',
+    responses={
+        200: {'description': 'Обновленное меню'},
+        404: {
+            'description': 'Меню не найдено',
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'menu not found'}
+                }
+            },
+        },
+    },
+)
 async def update_menu(
-        menu_id: UUID,
-        menu_data: CreateEditMenuModel,
-        menu_service: MenuService = Depends(get_menu_service)
-) -> dict:
+    menu_id: UUID,
+    menu_data: CreateEditMenuModel,
+    menu_service: MenuService = Depends(get_menu_service)
+) -> MenuModel:
     """
     Обновляет информацию о меню по его идентификатору.
 
     - **menu_id**: UUID обновляемого меню.
     - **menu_data**: новые данные для меню.
     """
-    return await menu_service.update_menu(menu_id, menu_data.model_dump())
+    menu = await menu_service.update_menu(menu_id, menu_data.model_dump())
+    return convert_menu(menu)
 
 
-@router.delete('/{menu_id}', status_code=200, summary='Удалить меню')
+@router.delete(
+    '/{menu_id}',
+    status_code=200,
+    summary='Удалить меню',
+    responses={
+        200: {
+            'description': 'Меню удалено',
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'menu deleted'}
+                }
+            },
+        },
+        404: {
+            'description': 'Меню не найдено',
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'menu not found'}
+                }
+            },
+        },
+    },
+)
 async def delete_menu(
         menu_id: UUID,
         menu_service: MenuService = Depends(get_menu_service)
-) -> dict:
+) -> dict[str, str]:
     """
     Удаляет меню по его идентификатору.
 
     - **menu_id**: UUID удаляемого меню.
     """
-    return await menu_service.delete_menu(menu_id)
+    await menu_service.delete_menu(menu_id)
+    return {'detail': 'menu deleted'}

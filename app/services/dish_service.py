@@ -1,10 +1,18 @@
 import json
+from typing import Any, TypedDict
 from uuid import UUID
 
 from fastapi import HTTPException
 
 from app.repositories.cache_repository import CacheRepository
 from app.repositories.dish_repository import DishRepository
+
+
+class DishDict(TypedDict):
+    id: str
+    title: str
+    description: str
+    price: str
 
 
 class DishService:
@@ -29,7 +37,7 @@ class DishService:
             self,
             menu_id: UUID,
             submenu_id: UUID
-    ) -> list[dict]:
+    ) -> list[DishDict]:
         """Возвращает список всех блюд с кэшированием."""
         cache_key = f'menu:{menu_id}/submenu:{submenu_id}/dishes:all'
         cached_dishes = await self.cache_repository.get(cache_key)
@@ -38,7 +46,7 @@ class DishService:
             return json.loads(cached_dishes)
 
         dishes_data = await self.dish_repository.get_all_dishes_for_submenu(submenu_id)
-        dishes_list = [
+        dishes_list: list[DishDict] = [
             {
                 'id': str(dish.id),
                 'title': dish.title,
@@ -55,7 +63,7 @@ class DishService:
             menu_id: UUID,
             submenu_id: UUID,
             dish_id: UUID
-    ) -> dict:
+    ) -> DishDict:
         """Возвращает детали блюда по ID с кэшированием."""
         cache_key = f'menu:{menu_id}/submenu:{submenu_id}/dish:{dish_id}'
         cached_dish = await self.cache_repository.get(cache_key)
@@ -67,7 +75,7 @@ class DishService:
         if dish_data is None:
             raise HTTPException(status_code=404, detail='dish not found')
 
-        dish = {
+        dish: DishDict = {
             'id': str(dish_data.id),
             'title': dish_data.title,
             'description': dish_data.description,
@@ -80,8 +88,8 @@ class DishService:
             self,
             menu_id: UUID,
             submenu_id: UUID,
-            dish_data: dict
-    ) -> dict:
+            dish_data: dict[str, Any]
+    ) -> DishDict:
         """Создает новое блюдо и обновляет кэш."""
         dish_data['price'] = self._validate_price(dish_data['price'])
         new_dish = await self.dish_repository.create_dish({**dish_data, 'menu_id': menu_id, 'submenu_id': submenu_id})
@@ -109,15 +117,15 @@ class DishService:
             menu_id: UUID,
             submenu_id: UUID,
             dish_id: UUID,
-            dish_data: dict
-    ) -> dict:
+            dish_data: dict[str, Any]
+    ) -> DishDict:
         """Обновляет существующее блюдо и кэш."""
         dish_data['price'] = self._validate_price(dish_data['price'])
         updated_dish = await self.dish_repository.update_dish(dish_id, dish_data)
         if updated_dish is None:
             raise HTTPException(status_code=404, detail='dish not found')
 
-        new_dish_data = {
+        new_dish_data: DishDict = {
             'id': str(updated_dish.id),
             'title': updated_dish.title,
             'description': updated_dish.description,
@@ -136,7 +144,7 @@ class DishService:
             menu_id: UUID,
             submenu_id: UUID,
             dish_id: UUID
-    ) -> dict[str, str]:
+    ) -> None:
         """Удаляет блюдо и связанный с ним кэш."""
         await self.dish_repository.delete_dish(dish_id)
         await self.cache_repository.delete(f'menu:{menu_id}/submenu:{submenu_id}/dish:{dish_id}')
@@ -145,5 +153,3 @@ class DishService:
         await self.cache_repository.delete(f'menu:{menu_id}/submenus:all')
         await self.cache_repository.delete(f'menu:{menu_id}')
         await self.cache_repository.delete('menus:all')
-
-        return {'detail': 'dish deleted'}

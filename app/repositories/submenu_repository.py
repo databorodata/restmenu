@@ -40,14 +40,14 @@ class SubmenuRepository:
         result = await self.session.execute(query)
         return result.first()
 
-    async def create_submenu(self, submenu_data: dict) -> Submenu:
+    async def create_submenu(self, submenu_data: dict[str, Any]) -> Submenu:
         """Создает и возвращает новое подменю."""
         new_submenu = Submenu(**submenu_data)
         self.session.add(new_submenu)
         await self.session.commit()
         return new_submenu
 
-    async def update_submenu(self, submenu_id: UUID, submenu_data: dict) -> Row:
+    async def update_submenu(self, submenu_id: UUID, submenu_data: dict[str, Any]) -> Row:
         """Обновляет и возвращает обновленное подменю."""
         await self.session.execute(
             update(Submenu)

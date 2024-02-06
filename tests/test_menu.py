@@ -29,7 +29,7 @@ class TestMenuAPI:
             self,
             client: AsyncClient,
             menu_repo: MenuRepository
-    ):
+    ) -> None:
         """Тест создает меню и ожидает успех."""
         data = {'title': 'menu 1', 'description': 'description 1'}
         response = await client.post(reverse('create_menu'), json=data)
@@ -49,7 +49,8 @@ class TestMenuAPI:
     async def test_when_get_menu_then_details_correct(
             self,
             client: AsyncClient,
-            create_menu_fixture):
+            create_menu_fixture: Menu
+    ) -> None:
         """Тест получает детали меню и ожидает корректные данные."""
         new_menu = create_menu_fixture
 
@@ -68,8 +69,8 @@ class TestMenuAPI:
             db_session: AsyncSession,
             client: AsyncClient,
             menu_repo: MenuRepository,
-            create_menu_fixture
-    ):
+            create_menu_fixture: Menu,
+    ) -> None:
         """Тест обновляет меню и проверяет, что детали изменены."""
         new_menu = create_menu_fixture
 
@@ -98,8 +99,8 @@ class TestMenuAPI:
             self,
             client: AsyncClient,
             menu_repo: MenuRepository,
-            create_menu_fixture
-    ):
+            create_menu_fixture: Menu,
+    ) -> None:
         """Тест удаляет меню и проверяет, что оно удалено."""
         new_menu = create_menu_fixture
 

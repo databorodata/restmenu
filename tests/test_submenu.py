@@ -41,7 +41,7 @@ class TestSubmenuAPI:
             self,
             client: AsyncClient,
             submenu_repo: SubmenuRepository
-    ):
+    ) -> None:
         """Тест создает подменю и ожидает успех."""
 
         data_menu = {'title': 'menu 1', 'description': 'description 1'}
@@ -70,8 +70,8 @@ class TestSubmenuAPI:
     async def test_when_get_submenu_then_details_correct(
             self,
             client: AsyncClient,
-            create_submenu_fixture
-    ):
+            create_submenu_fixture: tuple[Menu, Submenu],
+    ) -> None:
         """Тест получает детали подменю и ожидает корректные данные."""
 
         new_menu, new_submenu = create_submenu_fixture
@@ -96,8 +96,8 @@ class TestSubmenuAPI:
             db_session: AsyncSession,
             client: AsyncClient,
             submenu_repo: SubmenuRepository,
-            create_submenu_fixture
-    ):
+            create_submenu_fixture: tuple[Menu, Submenu],
+    ) -> None:
         """Тест обновляет подменю и проверяет, что детали изменены."""
         new_menu, new_submenu = create_submenu_fixture
 
@@ -126,8 +126,8 @@ class TestSubmenuAPI:
             self,
             client: AsyncClient,
             submenu_repo: SubmenuRepository,
-            create_submenu_fixture
-    ):
+            create_submenu_fixture: tuple[Menu, Submenu],
+    ) -> None:
         """Тест удаляет подменю и проверяет, что оно удалено."""
         new_menu, new_submenu = create_submenu_fixture
 

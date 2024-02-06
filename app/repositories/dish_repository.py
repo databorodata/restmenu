@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Any, Sequence
 from uuid import UUID
 
 from fastapi import Depends, HTTPException
@@ -26,14 +26,14 @@ class DishRepository:
         result = await self.session.execute(query)
         return result.scalars().one_or_none()
 
-    async def create_dish(self, dish_data: dict) -> Dish:
+    async def create_dish(self, dish_data: dict[str, Any]) -> Dish:
         """Создает и возвращает новое блюдо."""
         new_dish = Dish(**dish_data)
         self.session.add(new_dish)
         await self.session.commit()
         return new_dish
 
-    async def update_dish(self, dish_id: UUID, dish_data: dict) -> Row:
+    async def update_dish(self, dish_id: UUID, dish_data: dict[str, Any]) -> Row:
         """Обновляет и возвращает обновленное блюдо."""
         await self.session.execute(
             update(Dish)
