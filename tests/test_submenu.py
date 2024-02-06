@@ -8,8 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Menu, Submenu
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.submenu_repository import SubmenuRepository
-from app.routers.router_menu import router as router_menu
-from app.routers.router_submenu import router as router_submenu
+from tests.utils import reverse
 
 
 class TestSubmenuAPI:
@@ -46,12 +45,12 @@ class TestSubmenuAPI:
         """Тест создает подменю и ожидает успех."""
 
         data_menu = {'title': 'menu 1', 'description': 'description 1'}
-        response_menu = await client.post(router_menu.url_path_for('create_menu'), json=data_menu)
+        response_menu = await client.post(reverse('create_menu'), json=data_menu)
         menu_id = response_menu.json()['id']
 
         data_submenu = {'title': 'Test Submenu', 'description': 'Test Submenu Description'}
         response_submenu = await client.post(
-            router_submenu.url_path_for(
+            reverse(
                 'create_submenu',
                 menu_id=menu_id
             ),
@@ -78,7 +77,7 @@ class TestSubmenuAPI:
         new_menu, new_submenu = create_submenu_fixture
 
         response = await client.get(
-            router_submenu.url_path_for(
+            reverse(
                 'get_submenu',
                 menu_id=str(new_menu.id),
                 submenu_id=str(new_submenu.id)
@@ -104,7 +103,7 @@ class TestSubmenuAPI:
 
         update_data = {'title': 'submenu 1 update', 'description': 'description 1 update'}
         response = await client.patch(
-            router_submenu.url_path_for(
+            reverse(
                 'update_submenu',
                 menu_id=str(new_menu.id),
                 submenu_id=str(new_submenu.id)
@@ -133,7 +132,7 @@ class TestSubmenuAPI:
         new_menu, new_submenu = create_submenu_fixture
 
         response = await client.delete(
-            router_submenu.url_path_for(
+            reverse(
                 'delete_submenu',
                 menu_id=str(new_menu.id),
                 submenu_id=str(new_submenu.id)

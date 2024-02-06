@@ -9,9 +9,7 @@ from app.models import Dish, Menu, Submenu
 from app.repositories.dish_repository import DishRepository
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.submenu_repository import SubmenuRepository
-from app.routers.router_dish import router as router_dish
-from app.routers.router_menu import router as router_menu
-from app.routers.router_submenu import router as router_submenu
+from tests.utils import reverse
 
 
 class TestDishAPI:
@@ -59,27 +57,21 @@ class TestDishAPI:
         """Тест создает блюдо и ожидает успех."""
         data_menu = {'title': 'menu 1', 'description': 'description 1'}
         response_menu = await client.post(
-            router_menu.url_path_for(
-                'create_menu'),
+            reverse('create_menu'),
             json=data_menu
         )
         menu_id = response_menu.json()['id']
 
         data_submenu = {'title': 'Test Submenu', 'description': 'Test Submenu Description'}
         response_submenu = await client.post(
-            router_submenu.url_path_for(
-                'create_submenu',
-                menu_id=menu_id),
+            reverse('create_submenu', menu_id=menu_id),
             json=data_submenu
         )
         submenu_id = response_submenu.json()['id']
 
         data_dish = {'title': 'Test Dish', 'description': 'Test Dish Description', 'price': '42.42'}
         response_dish = await client.post(
-            router_dish.url_path_for(
-                'create_dish',
-                menu_id=menu_id,
-                submenu_id=submenu_id),
+            reverse('create_dish', menu_id=menu_id, submenu_id=submenu_id),
             json=data_dish
         )
         dish_id = response_dish.json()['id']
@@ -103,12 +95,7 @@ class TestDishAPI:
         new_menu, new_submenu, new_dish = create_dish_fixture
 
         response = await client.get(
-            router_dish.url_path_for(
-                'get_dish',
-                menu_id=str(new_menu.id),
-                submenu_id=str(new_submenu.id),
-                dish_id=str(new_dish.id)
-            )
+            reverse('get_dish', menu_id=str(new_menu.id), submenu_id=str(new_submenu.id), dish_id=str(new_dish.id))
         )
 
         assert response.status_code == 200
@@ -134,7 +121,7 @@ class TestDishAPI:
             'price': '20.24'
         }
         response = await client.patch(
-            router_dish.url_path_for(
+            reverse(
                 'update_dish',
                 menu_id=str(new_menu.id),
                 submenu_id=str(new_submenu.id),
@@ -164,11 +151,11 @@ class TestDishAPI:
         new_menu, new_submenu, new_dish = create_dish_fixture
 
         response = await client.delete(
-            router_dish.url_path_for(
+            reverse(
                 'delete_dish',
                 menu_id=str(new_menu.id),
                 submenu_id=str(new_submenu.id),
-                dish_id=str(new_dish.id)
+                dish_id=str(new_dish.id),
             )
         )
         assert response.json()['detail'] == 'dish deleted'

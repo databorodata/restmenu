@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Menu
 from app.repositories.menu_repository import MenuRepository
-from app.routers.router_menu import router as router_menu
+from tests.utils import reverse
 
 
 class TestMenuAPI:
@@ -32,7 +32,7 @@ class TestMenuAPI:
     ):
         """Тест создает меню и ожидает успех."""
         data = {'title': 'menu 1', 'description': 'description 1'}
-        response = await client.post(router_menu.url_path_for('create_menu'), json=data)
+        response = await client.post(reverse('create_menu'), json=data)
 
         menu_id = response.json()['id']
         menu = await menu_repo.get_menu_by_id(menu_id)
@@ -53,7 +53,7 @@ class TestMenuAPI:
         """Тест получает детали меню и ожидает корректные данные."""
         new_menu = create_menu_fixture
 
-        response = await client.get(router_menu.url_path_for('get_menu', menu_id=str(new_menu.id)))
+        response = await client.get(reverse('get_menu', menu_id=str(new_menu.id)))
 
         assert response.status_code == 200
         assert response.json()['id'] == str(new_menu.id)
@@ -75,7 +75,7 @@ class TestMenuAPI:
 
         update_data = {'title': 'menu 1 update', 'description': 'description 1 update'}
         response = await client.patch(
-            router_menu.url_path_for(
+            reverse(
                 'update_menu',
                 menu_id=str(new_menu.id)
             ),
@@ -104,7 +104,7 @@ class TestMenuAPI:
         new_menu = create_menu_fixture
 
         response = await client.delete(
-            router_menu.url_path_for(
+            reverse(
                 'delete_menu',
                 menu_id=str(new_menu.id)
             )
