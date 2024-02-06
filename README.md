@@ -74,19 +74,8 @@ Python 3.10, PostgreSQL
    docker-compose -f docker-compose-tests.yml up
    ```
 
-### Задание "Реализовать вывод количества подменю и блюд для Меню через один (сложный) ORM запрос."
-
-
-Запрос реализовал в отдельном эндпоинте:
-
-https://github.com/databorodata/restmenu/blob/pytest_docker/app/routers/complex.py#L16
-
-
-Так же внедрил запрос для работы эндопоинтов сущности Меню
-
-https://github.com/databorodata/restmenu/blob/pytest_docker/app/routers/router_menu.py#L30
-
-
 ### Задание "6.** Реализовать в тестах аналог Django reverse() для FastAPI"
 
-Аналог Django reverse() реализован во всех тестовых функциях.
+Аналог Django reverse() реализован в файле tests/utils
+
+https://github.com/databorodata/restmenu/blob/redis_solid/tests/utils.py#L6

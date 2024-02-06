@@ -30,7 +30,7 @@ def convert_menu(menu: MenuDict) -> MenuModel:
 
 
 @router.get(
-    '/menus/',
+    '/',
     summary='Получить список меню',
     response_description='Список всех меню',
     response_model=list[MenuModel],
@@ -44,7 +44,6 @@ async def get_menus(menu_service: MenuService = Depends(get_menu_service)) -> li
     return [convert_menu(it) for it in menus]
 
 
-# @router.get('/{menu_id}', status_code=200, response_model=MenuModel, summary='Получить детали меню')
 @router.get(
     '/{menu_id}',
     summary='Получить детали меню',
