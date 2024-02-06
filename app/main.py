@@ -6,8 +6,18 @@ from app.routers import router_dish, router_menu, router_submenu
 
 app = FastAPI(
     title='Меню ресторана',
-    description='REST API по работе с меню ресторана',
+    description='Это API позволяет управлять меню ресторана.',
     version='1.0.0',
+    openapi_tags=[{
+        'name': 'Menus',
+        'description': 'Операции с меню.',
+    }, {
+        'name': 'Submenus',
+        'description': 'Операции с подменю.',
+    }, {
+        'name': 'Dishes',
+        'description': 'Операции с блюдами.',
+    }]
 )
 
 
