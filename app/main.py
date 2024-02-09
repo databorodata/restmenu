@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 
 from app.database import create_db_and_tables
 from app.routers import router_dish, router_menu, router_submenu
+from tasks import update_menu_from_sheet
 
 app = FastAPI(
     title='Меню ресторана',
@@ -19,11 +20,19 @@ app = FastAPI(
     }]
 )
 
+@app.get("/menus/")
+async def get_menus(background_tasks: BackgroundTasks):
+    # Добавьте логику для вывода всех меню
+    # Используйте background_tasks.add_task() для асинхронного вызова задачи инвалидации кэша
+    pass
 
 @app.on_event('startup')
 async def on_startup() -> None:
     """Инициализирует базу данных при запуске приложения."""
     await create_db_and_tables()
+    # result = update_menu_from_sheet()
+    # print(f"ready? {result}")
+
 
 app.include_router(router_menu.router)
 app.include_router(router_submenu.router)
