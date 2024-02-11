@@ -2,7 +2,7 @@ import json
 from typing import Any, TypedDict
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 
 from app.repositories.cache_repository import CacheRepository
 from app.repositories.dish_repository import DishRepository
@@ -13,6 +13,35 @@ class DishDict(TypedDict):
     title: str
     description: str
     price: str
+
+
+async def invalidate_dish(
+        cache: CacheRepository,
+        menu_id: str,
+        submenu_id: str,
+        dish_id: str,
+) -> None:
+    await cache.delete(f'menu:{menu_id}/submenu:{submenu_id}/dish:{dish_id}')
+
+
+async def invalidate_dish_all(
+        cache: CacheRepository,
+        menu_id: str,
+        submenu_id: str,
+) -> None:
+    await cache.delete(f'menu:{menu_id}/submenu:{submenu_id}/dishes:all')
+
+
+async def invalidate_dishes_submenu_submenus_menu_menus(
+        cache: CacheRepository,
+        menu_id: str,
+        submenu_id: str
+) -> None:
+    await cache.delete(f'menu:{menu_id}/submenu:{submenu_id}/dishes:all')
+    await cache.delete(f'menu:{menu_id}/submenu:{submenu_id}')
+    await cache.delete(f'menu:{menu_id}/submenus:all')
+    await cache.delete(f'menu:{menu_id}')
+    await cache.delete('menus:all')
 
 
 class DishService:
@@ -88,7 +117,8 @@ class DishService:
             self,
             menu_id: UUID,
             submenu_id: UUID,
-            dish_data: dict[str, Any]
+            dish_data: dict[str, Any],
+            background_tasks: BackgroundTasks,
     ) -> DishDict:
         """Создает новое блюдо и обновляет кэш."""
         dish_data['price'] = self._validate_price(dish_data['price'])
@@ -104,11 +134,12 @@ class DishService:
             json.dumps(dish_cache_data),
             expire=60)
 
-        await self.cache_repository.delete(f'menu:{menu_id}/submenu:{submenu_id}/dishes:all')
-        await self.cache_repository.delete(f'menu:{menu_id}/submenu:{submenu_id}')
-        await self.cache_repository.delete(f'menu:{menu_id}/submenus:all')
-        await self.cache_repository.delete(f'menu:{menu_id}')
-        await self.cache_repository.delete('menus:all')
+        background_tasks.add_task(
+            invalidate_dishes_submenu_submenus_menu_menus,
+            self.cache_repository,
+            str(menu_id),
+            str(submenu_id)
+        )
 
         return new_dish
 
@@ -117,7 +148,8 @@ class DishService:
             menu_id: UUID,
             submenu_id: UUID,
             dish_id: UUID,
-            dish_data: dict[str, Any]
+            dish_data: dict[str, Any],
+            background_tasks: BackgroundTasks,
     ) -> DishDict:
         """Обновляет существующее блюдо и кэш."""
         dish_data['price'] = self._validate_price(dish_data['price'])
@@ -135,7 +167,13 @@ class DishService:
             f'menu:{menu_id}/submenu:{submenu_id}/dish:{dish_id}',
             json.dumps(new_dish_data),
             expire=60)
-        await self.cache_repository.delete(f'menu:{menu_id}/submenu:{submenu_id}/dishes:all')
+
+        background_tasks.add_task(
+            invalidate_dish_all,
+            self.cache_repository,
+            str(menu_id),
+            str(submenu_id)
+        )
 
         return new_dish_data
 
@@ -143,13 +181,21 @@ class DishService:
             self,
             menu_id: UUID,
             submenu_id: UUID,
-            dish_id: UUID
+            dish_id: UUID,
+            background_tasks: BackgroundTasks,
     ) -> None:
         """Удаляет блюдо и связанный с ним кэш."""
         await self.dish_repository.delete_dish(dish_id)
-        await self.cache_repository.delete(f'menu:{menu_id}/submenu:{submenu_id}/dish:{dish_id}')
-        await self.cache_repository.delete(f'menu:{menu_id}/submenu:{submenu_id}/dishes:all')
-        await self.cache_repository.delete(f'menu:{menu_id}/submenu:{submenu_id}')
-        await self.cache_repository.delete(f'menu:{menu_id}/submenus:all')
-        await self.cache_repository.delete(f'menu:{menu_id}')
-        await self.cache_repository.delete('menus:all')
+        background_tasks.add_task(
+            invalidate_dish,
+            self.cache_repository,
+            str(menu_id),
+            str(submenu_id),
+            str(dish_id)
+        )
+        background_tasks.add_task(
+            invalidate_dishes_submenu_submenus_menu_menus,
+            self.cache_repository,
+            str(menu_id),
+            str(submenu_id)
+        )

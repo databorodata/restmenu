@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session, get_redis_connection
@@ -87,14 +87,15 @@ async def get_menu(
 )
 async def create_menu(
     menu_data: CreateEditMenuModel,
-    menu_service: MenuService = Depends(get_menu_service)
+    background_tasks: BackgroundTasks,
+    menu_service: MenuService = Depends(get_menu_service),
 ) -> MenuModel:
     """
     Создает новое меню с указанными данными.
 
     - **menu_data**: данные для создания меню.
     """
-    menu = await menu_service.create_menu(menu_data.model_dump())
+    menu = await menu_service.create_menu(menu_data.model_dump(), background_tasks)
     return convert_menu(menu)
 
 
@@ -118,6 +119,7 @@ async def create_menu(
 async def update_menu(
     menu_id: UUID,
     menu_data: CreateEditMenuModel,
+    background_tasks: BackgroundTasks,
     menu_service: MenuService = Depends(get_menu_service)
 ) -> MenuModel:
     """
@@ -126,7 +128,7 @@ async def update_menu(
     - **menu_id**: UUID обновляемого меню.
     - **menu_data**: новые данные для меню.
     """
-    menu = await menu_service.update_menu(menu_id, menu_data.model_dump())
+    menu = await menu_service.update_menu(menu_id, menu_data.model_dump(), background_tasks)
     return convert_menu(menu)
 
 
@@ -154,13 +156,14 @@ async def update_menu(
     },
 )
 async def delete_menu(
-        menu_id: UUID,
-        menu_service: MenuService = Depends(get_menu_service)
+    menu_id: UUID,
+    background_tasks: BackgroundTasks,
+    menu_service: MenuService = Depends(get_menu_service)
 ) -> dict[str, str]:
     """
     Удаляет меню по его идентификатору.
 
     - **menu_id**: UUID удаляемого меню.
     """
-    await menu_service.delete_menu(menu_id)
+    await menu_service.delete_menu(menu_id, background_tasks)
     return {'detail': 'menu deleted'}

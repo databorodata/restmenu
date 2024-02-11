@@ -2,7 +2,7 @@ import json
 from typing import Any, TypedDict
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 
 from app.repositories.cache_repository import CacheRepository
 from app.repositories.submenu_repository import SubmenuRepository
@@ -13,6 +13,20 @@ class SubmenuDict(TypedDict):
     title: str
     description: str
     dishes_count: int
+
+
+async def invalidate_submenu_menu_menus(cache: CacheRepository, menu_id: str) -> None:
+    await cache.delete(f'menu:{menu_id}/submenus:all')
+    await cache.delete(f'menu:{menu_id}')
+    await cache.delete('menus:all')
+
+
+async def invalidate_submenus_all(cache: CacheRepository, menu_id: str) -> None:
+    await cache.delete(f'menu:{menu_id}/submenus:all')
+
+
+async def invalidate_submenu_pattern(cache: CacheRepository, menu_id: str, submenu_id: str) -> None:
+    await cache.delete_pattern(f'menu:{menu_id}/submenu:{submenu_id}*')
 
 
 class SubmenuService:
@@ -66,7 +80,12 @@ class SubmenuService:
         await self.cache_repository.set(cache_key, json.dumps(submenu), expire=60)
         return submenu
 
-    async def create_submenu(self, menu_id: UUID, submenu_data: dict[str, Any]) -> SubmenuDict:
+    async def create_submenu(
+            self,
+            menu_id: UUID,
+            submenu_data: dict[str, Any],
+            background_tasks: BackgroundTasks
+    ) -> SubmenuDict:
         """Создает новое подменю и обновляет кэш."""
         new_submenu = await self.submenu_repository.create_submenu({**submenu_data, 'menu_id': menu_id})
         submenu_cache_data: SubmenuDict = {
@@ -79,12 +98,20 @@ class SubmenuService:
             f'menu:{menu_id}/submenu:{str(new_submenu.id)}',
             json.dumps(submenu_cache_data),
             expire=60)
-        await self.cache_repository.delete(f'menu:{menu_id}/submenus:all')
-        await self.cache_repository.delete(f'menu:{menu_id}')
-        await self.cache_repository.delete('menus:all')
+        background_tasks.add_task(
+            invalidate_submenu_menu_menus,
+            self.cache_repository,
+            str(menu_id)
+        )
         return submenu_cache_data
 
-    async def update_submenu(self, menu_id: UUID, submenu_id: UUID, submenu_data: dict[str, Any]) -> SubmenuDict:
+    async def update_submenu(
+            self,
+            menu_id: UUID,
+            submenu_id: UUID,
+            submenu_data: dict[str, Any],
+            background_tasks: BackgroundTasks
+    ) -> SubmenuDict:
         """Обновляет существующее подменю и кэш."""
         updated_submenu = await self.submenu_repository.update_submenu(submenu_id, submenu_data)
         if updated_submenu is None:
@@ -99,14 +126,29 @@ class SubmenuService:
         await self.cache_repository.set(f'menu:{menu_id}/submenu:{submenu_id}',
                                         json.dumps(new_submenu_data),
                                         expire=60)
-        await self.cache_repository.delete(f'menu:{menu_id}/submenus:all')
-
+        background_tasks.add_task(
+            invalidate_submenus_all,
+            self.cache_repository,
+            str(menu_id)
+        )
         return new_submenu_data
 
-    async def delete_submenu(self, menu_id: UUID, submenu_id: UUID) -> None:
+    async def delete_submenu(
+            self,
+            menu_id: UUID,
+            submenu_id: UUID,
+            background_tasks: BackgroundTasks,
+    ) -> None:
         """Удаляет подменю и связанный с ним кэш."""
         await self.submenu_repository.delete_submenu(submenu_id)
-        await self.cache_repository.delete_pattern(f'menu:{menu_id}/submenu:{submenu_id}*')
-        await self.cache_repository.delete(f'menu:{menu_id}/submenus:all')
-        await self.cache_repository.delete(f'menu:{menu_id}')
-        await self.cache_repository.delete('menus:all')
+        background_tasks.add_task(
+            invalidate_submenu_pattern,
+            self.cache_repository,
+            str(menu_id),
+            str(submenu_id)
+        )
+        background_tasks.add_task(
+            invalidate_submenu_menu_menus,
+            self.cache_repository,
+            str(menu_id)
+        )

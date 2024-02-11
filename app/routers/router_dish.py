@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session, get_redis_connection
@@ -99,6 +99,7 @@ async def create_dish(
         menu_id: UUID,
         submenu_id: UUID,
         dish_data: CreateEditDishModel,
+        background_tasks: BackgroundTasks,
         dish_service: DishService = Depends(get_dish_service)
 ) -> DishModel:
     """
@@ -108,7 +109,12 @@ async def create_dish(
     - **submenu_id**: UUID родительского подменю.
     - **dish_data**: данные для создания блюда.
     """
-    dish = await dish_service.create_dish(menu_id, submenu_id, dish_data.model_dump())
+    dish = await dish_service.create_dish(
+        menu_id,
+        submenu_id,
+        dish_data.model_dump(),
+        background_tasks
+    )
     return convert_dish(dish)
 
 
@@ -133,6 +139,7 @@ async def update_dish(
         submenu_id: UUID,
         dish_id: UUID,
         dish_data: CreateEditDishModel,
+        background_tasks: BackgroundTasks,
         dish_service: DishService = Depends(get_dish_service)
 ) -> DishModel:
     """
@@ -143,7 +150,13 @@ async def update_dish(
     - **dish_id**: UUID обновляемого блюда.
     - **dish_data**: новые данные для блюда.
     """
-    dish = await dish_service.update_dish(menu_id, submenu_id, dish_id, dish_data.model_dump())
+    dish = await dish_service.update_dish(
+        menu_id,
+        submenu_id,
+        dish_id,
+        dish_data.model_dump(),
+        background_tasks
+    )
     return convert_dish(dish)
 
 
@@ -174,7 +187,8 @@ async def delete_dish(
         menu_id: UUID,
         submenu_id: UUID,
         dish_id: UUID,
-        dish_service: DishService = Depends(get_dish_service)
+        background_tasks: BackgroundTasks,
+        dish_service: DishService = Depends(get_dish_service),
 ) -> dict[str, str]:
     """
     Удаляет блюдо из подменю.
@@ -183,5 +197,10 @@ async def delete_dish(
     - **submenu_id**: UUID родительского подменю.
     - **dish_id**: UUID удаляемого блюда.
     """
-    await dish_service.delete_dish(menu_id, submenu_id, dish_id)
+    await dish_service.delete_dish(
+        menu_id,
+        submenu_id,
+        dish_id,
+        background_tasks,
+    )
     return {'detail': 'dish deleted'}

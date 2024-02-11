@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session, get_redis_connection
@@ -94,6 +94,7 @@ async def get_submenu(
 async def create_submenu(
         menu_id: UUID,
         submenu_data: CreateEditSubmenuModel,
+        background_tasks: BackgroundTasks,
         submenu_service: SubmenuService = Depends(get_submenu_service)
 ) -> SubmenuModel:
     """
@@ -102,7 +103,11 @@ async def create_submenu(
     - **menu_id**: UUID родительского меню.
     - **submenu_data**: данные для создания подменю.
     """
-    submenu = await submenu_service.create_submenu(menu_id, submenu_data.model_dump())
+    submenu = await submenu_service.create_submenu(
+        menu_id,
+        submenu_data.model_dump(),
+        background_tasks
+    )
     return convert_submenu(submenu)
 
 
@@ -127,6 +132,7 @@ async def update_submenu(
     menu_id: UUID,
     submenu_id: UUID,
     submenu_data: CreateEditSubmenuModel,
+    background_tasks: BackgroundTasks,
     submenu_service: SubmenuService = Depends(get_submenu_service)
 ) -> SubmenuModel:
     """
@@ -136,7 +142,12 @@ async def update_submenu(
     - **submenu_id**: UUID обновляемого подменю.
     - **submenu_data**: новые данные для подменю.
     """
-    submenu = await submenu_service.update_submenu(menu_id, submenu_id, submenu_data.model_dump())
+    submenu = await submenu_service.update_submenu(
+        menu_id,
+        submenu_id,
+        submenu_data.model_dump(),
+        background_tasks
+    )
     return convert_submenu(submenu)
 
 
@@ -166,6 +177,7 @@ async def update_submenu(
 async def delete_submenu(
     menu_id: UUID,
     submenu_id: UUID,
+    background_tasks: BackgroundTasks,
     submenu_service: SubmenuService = Depends(get_submenu_service)
 ) -> dict[str, str]:
     """
@@ -174,5 +186,5 @@ async def delete_submenu(
     - **menu_id**: UUID родительского меню.
     - **submenu_id**: UUID удаляемого подменю.
     """
-    await submenu_service.delete_submenu(menu_id, submenu_id)
+    await submenu_service.delete_submenu(menu_id, submenu_id, background_tasks)
     return {'detail': 'submenu deleted'}

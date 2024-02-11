@@ -2,7 +2,7 @@ import json
 from typing import Any, TypedDict
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 
 from app.repositories.cache_repository import CacheRepository
 from app.repositories.menu_repository import MenuRepository
@@ -14,6 +14,15 @@ class MenuDict(TypedDict):
     description: str
     submenus_count: int
     dishes_count: int
+
+
+async def invalidate_menu(cache: CacheRepository, menu_id: str) -> None:
+    await cache.delete_pattern(f'menu:{menu_id}*')
+    await cache.delete('menus:all')
+
+
+async def invalidate_menu_all(cache: CacheRepository) -> None:
+    await cache.delete('menus:all')
 
 
 class MenuService:
@@ -71,7 +80,7 @@ class MenuService:
         await self.cache_repository.set(cache_key, json.dumps(menu), expire=60)
         return menu
 
-    async def create_menu(self, menu_data: dict[str, Any]) -> MenuDict:
+    async def create_menu(self, menu_data: dict[str, Any], background_tasks: BackgroundTasks) -> MenuDict:
         """Создает новое меню и обновляет кэш."""
         new_menu = await self.menu_repository.create_menu(menu_data)
         menu_cache_data: MenuDict = {
@@ -82,10 +91,10 @@ class MenuService:
             'dishes_count': 0
         }
         await self.cache_repository.set(f'menu:{str(new_menu.id)}', json.dumps(menu_cache_data), expire=60)
-        await self.cache_repository.delete('menus:all')
+        background_tasks.add_task(invalidate_menu_all, self.cache_repository)
         return menu_cache_data
 
-    async def update_menu(self, menu_id: UUID, menu_data: dict[str, Any]) -> MenuDict:
+    async def update_menu(self, menu_id: UUID, menu_data: dict[str, Any], background_tasks: BackgroundTasks) -> MenuDict:
         """Обновляет существующее меню и кэш."""
         updated_menu = await self.menu_repository.update_menu(menu_id, menu_data)
         if updated_menu is None:
@@ -99,12 +108,11 @@ class MenuService:
             'dishes_count': updated_menu.dishes_count
         }
         await self.cache_repository.set(f'menu:{menu_id}', json.dumps(new_menu_data), expire=60)
-        await self.cache_repository.delete('menus:all')
+        background_tasks.add_task(invalidate_menu_all, self.cache_repository)
 
         return new_menu_data
 
-    async def delete_menu(self, menu_id: UUID) -> None:
+    async def delete_menu(self, menu_id: UUID, background_tasks: BackgroundTasks) -> None:
         """Удаляет меню и связанный с ним кэш."""
         await self.menu_repository.delete_menu(menu_id)
-        await self.cache_repository.delete_pattern(f'menu:{menu_id}*')
-        await self.cache_repository.delete('menus:all')
+        background_tasks.add_task(invalidate_menu, self.cache_repository, str(menu_id))
