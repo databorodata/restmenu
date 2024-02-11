@@ -14,3 +14,5 @@ DB_USER = os.environ.get('POSTGRES_USER')
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT')
 REDIS_DB = os.environ.get('REDIS_HOST')
+
+RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')

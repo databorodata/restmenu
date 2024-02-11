@@ -17,7 +17,6 @@ def parse_sheet(data: list[Any]) -> list[BatchCreateMenuModel]:
     current_row = 0
     result = []
     while current_row < len(data) and get_int(data[current_row][current_col]):
-        print(data[current_row][current_col + 1])
         menu_title = data[current_row][current_col + 1]
         menu_description = data[current_row][current_col + 2]
         current_col += 1
@@ -27,7 +26,6 @@ def parse_sheet(data: list[Any]) -> list[BatchCreateMenuModel]:
         while current_row < len(data) and get_int(data[current_row][current_col]):
             submenu_title = data[current_row][current_col + 1]
             submenu_description = data[current_row][current_col + 2]
-            print(submenu_title)
 
             current_col += 1
             current_row += 1
@@ -36,7 +34,6 @@ def parse_sheet(data: list[Any]) -> list[BatchCreateMenuModel]:
                 dish_data = CreateEditDishModel(title=data[current_row][current_col + 1],
                                                 description=data[current_row][current_col + 2],
                                                 price=data[current_row][current_col + 3])
-                print(dish_data.title)
                 dishes.append(dish_data)
                 current_row += 1
 

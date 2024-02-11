@@ -16,14 +16,10 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapi
 
 @celery_app.task(name='update_menu_from_sheet')
 def update_menu_from_sheet():
-    print('Starting update_menu_from_sheet task')
-    # creds = Credentials.from_service_account_file('../app/backprocess/creds.json', scopes=SCOPES)
     creds = Credentials.from_service_account_file('background/creds.json', scopes=SCOPES)
     client = gspread.authorize(creds)
     sheet = client.open('restmenu_sheet').sheet1
-    # data = sheet.get_all_records()
     data = sheet.get_values()
-    print(data)
 
     async def update_db():
         menus = parse_sheet(data)
