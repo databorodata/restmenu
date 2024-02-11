@@ -30,3 +30,6 @@ class CacheRepository:
             if keys:
                 await self.redis.delete(*keys)
             has_next = (cursor != 0)
+
+    async def delete_all(self) -> None:
+        await self.redis.flushall()
