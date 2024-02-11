@@ -1,7 +1,7 @@
 from fastapi import BackgroundTasks, FastAPI
 
 from app.database import create_db_and_tables
-from app.routers import router_dish, router_menu, router_submenu
+from app.routers import router_dish, router_full_menu, router_menu, router_submenu
 
 app = FastAPI(
     title='Меню ресторана',
@@ -38,6 +38,7 @@ async def on_startup() -> None:
 app.include_router(router_menu.router)
 app.include_router(router_submenu.router)
 app.include_router(router_dish.router)
+app.include_router(router_full_menu.router)
 
 
 @app.get('/')

@@ -32,3 +32,13 @@ class CreateEditDishModel(BaseModel):
 
 class DishModel(CreateEditDishModel):
     id: uuid.UUID
+
+
+class FullSubmenuModel(CreateEditSubmenuModel):
+    id: uuid.UUID
+    dishes: list[DishModel]
+
+
+class FullMenuModel(CreateEditMenuModel):
+    id: uuid.UUID
+    submenus: list[FullSubmenuModel]

@@ -77,3 +77,11 @@ class MenuRepository:
         if result.rowcount == 0:
             raise HTTPException(status_code=404, detail='menu not found')
         await self.session.commit()
+
+    async def get_full_menus(self) -> Sequence[tuple[Menu, Submenu, Dish]]:
+        query = (select(Menu, Submenu, Dish)
+                 .join(Submenu, Submenu.menu_id == Menu.id, isouter=True)
+                 .join(Dish, Dish.submenu_id == Submenu.id, isouter=True))
+
+        result = await self.session.execute(query)
+        return result.all()
