@@ -74,8 +74,39 @@ Python 3.10, PostgreSQL
    docker-compose -f docker-compose-tests.yml up
    ```
 
-### Задание "6.** Реализовать в тестах аналог Django reverse() для FastAPI"
+## Доступ к google sheet открыт для редактирования по ссылке:
 
-Аналог Django reverse() реализован в файле tests/utils
+https://docs.google.com/spreadsheets/d/1aSWKJa9XeNGBfrtz2vdyuVKSW-y7XpkaZzkeIZpuG_8/edit#gid=1285963425
 
-https://github.com/databorodata/restmenu/blob/redis_solid/tests/utils.py#L6
+
+## Задания со звёздочкой
+
+### * Реализовать вывод количества подменю и блюд для Меню через один (сложный) ORM запрос.
+
+Реализован во всех файлах в папке app/repositories. Например здесь:
+
+https://github.com/databorodata/restmenu/blob/celery_rabbit/app/repositories/menu_repository.py#L50
+
+### ** Реализовать тестовый сценарий «Проверка кол-ва блюд и подменю в меню» из Postman с помощью pytest
+
+Реализован здесь:
+
+https://github.com/databorodata/restmenu/blob/celery_rabbit/tests/test_count_submenu_dish.py#L10
+
+### * Описать ручки API в соответствий c OpenAPI
+
+Реализован во всех файлах в папке app/router . Например здесь:
+
+https://github.com/databorodata/restmenu/blob/celery_rabbit/app/routers/router_menu.py#L18
+
+### ** Реализовать в тестах аналог Django reverse() для FastAPI
+
+Реализован во всех тестах ( папка tests). Функция reverse здесь:
+
+https://github.com/databorodata/restmenu/blob/celery_rabbit/tests/utils.py#L6
+
+### * Обновление меню из google sheets раз в 15 сек.
+
+Реализация механизма обновления происходит в папке backgorund. Иницализация celery  здесь:
+
+https://github.com/databorodata/restmenu/blob/celery_rabbit/background/celery_app.py#L18
