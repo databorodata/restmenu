@@ -13,6 +13,7 @@ def get_int(cell):
 
 
 def parse_sheet(data: list[Any]) -> list[BatchCreateMenuModel]:
+    """Парсинг данных из google sheets"""
     current_col = 0
     current_row = 0
     result = []

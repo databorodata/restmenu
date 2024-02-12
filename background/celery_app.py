@@ -7,9 +7,8 @@ from app.config import RABBITMQ_HOST
 # Инициализация Celery
 celery_app = Celery(
     'worker',
-    broker=f'amqp://guest:guest@{RABBITMQ_HOST}',  # URL для RabbitMQ
-    # backend='rpc://',
-    include=['background.tasks']  # Указываем, где искать задачи Celery
+    broker=f'amqp://guest:guest@{RABBITMQ_HOST}',
+    include=['background.tasks']
 )
 
 celery_app.conf.beat_schedule = {

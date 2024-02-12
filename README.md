@@ -82,6 +82,10 @@ https://docs.google.com/spreadsheets/d/1aSWKJa9XeNGBfrtz2vdyuVKSW-y7XpkaZzkeIZpu
 
 https://github.com/databorodata/restmenu/blob/celery_rabbit/app/routers/router_full_menu.py#L23
 
+### Тесты к эндпоинту находятся здесьЖ
+
+https://github.com/databorodata/restmenu/blob/celery_rabbit/tests/test_full_menu.py#L14
+
 ## Задания со звёздочкой
 
 ### * Реализовать вывод количества подменю и блюд для Меню через один (сложный) ORM запрос.

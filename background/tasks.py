@@ -17,12 +17,14 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapi
 
 @celery_app.task(name='update_menu_from_sheet')
 def update_menu_from_sheet():
+    """Фоновая задача обновление меню из google sheets раз в 15 сек"""
     creds = Credentials.from_service_account_file('background/creds.json', scopes=SCOPES)
     client = gspread.authorize(creds)
     sheet = client.open('restmenu_sheet').sheet1
     data = sheet.get_values()
 
     async def update_db():
+        """Обновление меню из google sheets"""
         menus = parse_sheet(data)
 
         redis_connection = await get_redis_connection()

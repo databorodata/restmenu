@@ -30,5 +30,7 @@ def get_full_menu_service(
     },
 )
 async def get_full_menus(full_menu_service: FullMenuService = Depends(get_full_menu_service)) -> list[FullMenuModel]:
+    """Возвращает список всех доступных меню в системе."""
+    """Со связанными подменю и блюдами"""
     result = await full_menu_service.get_full_menus()
     return result
