@@ -21,10 +21,12 @@ Base = declarative_base()
 engine = create_async_engine(DATABASE_URL)
 async_session_maker = async_sessionmaker(bind=engine, expire_on_commit=False)
 
+REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+
 
 async def get_redis_connection() -> aioredis.Redis:
     """Создание соединения с Redis."""
-    redis = aioredis.from_url(f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}', encoding='utf-8', decode_responses=True)
+    redis = aioredis.from_url(REDIS_URL, encoding='utf-8', decode_responses=True)
     return redis
 
 

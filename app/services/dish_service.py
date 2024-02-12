@@ -44,6 +44,15 @@ async def invalidate_dishes_submenu_submenus_menu_menus(
     await cache.delete('menus:all')
 
 
+def validate_price(price: str) -> str:
+    """Проверяет корректность полученной цены блюда и возвращает корректный результат."""
+    try:
+        price_float = float(price)
+    except ValueError:
+        raise HTTPException(status_code=400, detail='price type is not correct')
+    return f'{price_float:.2f}'
+
+
 class DishService:
     def __init__(
             self,
@@ -53,14 +62,6 @@ class DishService:
         """Инициализация сервиса для работы с блюдо."""
         self.dish_repository = dish_repository
         self.cache_repository = cache_repository
-
-    def _validate_price(self, price: str) -> str:
-        """Проверяет корректность полученной цены блюда и возвращает корректный результат."""
-        try:
-            price_float = float(price)
-        except ValueError:
-            raise HTTPException(status_code=400, detail='price type is not correct')
-        return f'{price_float:.2f}'
 
     async def get_dishes(
             self,
@@ -121,7 +122,7 @@ class DishService:
             background_tasks: BackgroundTasks,
     ) -> DishDict:
         """Создает новое блюдо и обновляет кэш."""
-        dish_data['price'] = self._validate_price(dish_data['price'])
+        dish_data['price'] = validate_price(dish_data['price'])
         new_dish = await self.dish_repository.create_dish({**dish_data, 'menu_id': menu_id, 'submenu_id': submenu_id})
         dish_cache_data = {
             'id': str(new_dish.id),
@@ -152,7 +153,7 @@ class DishService:
             background_tasks: BackgroundTasks,
     ) -> DishDict:
         """Обновляет существующее блюдо и кэш."""
-        dish_data['price'] = self._validate_price(dish_data['price'])
+        dish_data['price'] = validate_price(dish_data['price'])
         updated_dish = await self.dish_repository.update_dish(dish_id, dish_data)
         if updated_dish is None:
             raise HTTPException(status_code=404, detail='dish not found')

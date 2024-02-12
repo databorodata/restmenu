@@ -19,7 +19,8 @@ class TestFullMenuAPI:
             client: AsyncClient,
             menu_repo: MenuRepository,
             submenu_repo: SubmenuRepository,
-            dish_repo: DishRepository
+            dish_repo: DishRepository,
+            cleanup_db: None,
     ) -> AsyncGenerator[tuple[Menu, Submenu, Dish, Dish, Submenu, Dish, Dish], None]:
         """Фикстура для создания меню с подменю и блюдами для тестирования."""
 
@@ -85,7 +86,7 @@ class TestFullMenuAPI:
     async def test_when_get_menus_then_menus_correct(
             self,
             client: AsyncClient,
-            create_menu_submenu_dish_fixture: tuple[Menu, Submenu, Dish, Dish, Submenu, Dish, Dish],
+            create_menu_submenu_dish_fixture: tuple[Menu, Submenu, Dish, Dish, Submenu, Dish, Dish]
     ) -> None:
         """Тест получает список меню с одним и связанными двумя подменю и связанными четырьмя блюдами."""
         """И ожидает конкретные данные"""
@@ -102,7 +103,11 @@ class TestFullMenuAPI:
 
         response = await client.get(reverse('get_full_menus'))
 
+        assert response.status_code == 200
+
         menus_list = response.json()
+        assert len(menus_list) == 1
+
         menu_dict = menus_list[0]
         submenus_list = menu_dict['submenus']
         submenu_dict_1 = submenus_list[0]
@@ -114,11 +119,7 @@ class TestFullMenuAPI:
         dish_dict_2_1 = dishes_list_2[0]
         dish_dict_2_2 = dishes_list_2[1]
 
-        assert response.status_code == 200
-
         assert menu_dict['description'] == new_menu1.description
-        assert len(menus_list) == 1
-
         assert submenu_dict_1['title'] == new_submenu1_1.title
         assert submenu_dict_2['id'] == str(new_submenu1_2.id)
         assert len(submenus_list) == 2

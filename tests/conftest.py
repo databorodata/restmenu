@@ -2,15 +2,19 @@ import asyncio
 from asyncio import AbstractEventLoop
 from typing import AsyncGenerator, Generator
 
+import aioredis
 import pytest
 import pytest_asyncio
+from aioredis import Redis
 from httpx import AsyncClient
-from sqlalchemy import NullPool
+from sqlalchemy import NullPool, delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
-from app.database import Base
+from app.database import REDIS_URL, Base
 from app.main import app
+from app.models import Menu
+from app.repositories.cache_repository import CacheRepository
 from app.repositories.dish_repository import DishRepository
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.submenu_repository import SubmenuRepository
@@ -64,3 +68,20 @@ async def submenu_repo(db_session: AsyncSession) -> AsyncGenerator[SubmenuReposi
 @pytest_asyncio.fixture
 async def dish_repo(db_session: AsyncSession) -> AsyncGenerator[DishRepository, None]:
     yield DishRepository(db_session)
+
+
+@pytest_asyncio.fixture
+async def redis() -> AsyncGenerator[Redis, None]:
+    yield aioredis.from_url(REDIS_URL, encoding='utf-8', decode_responses=True)
+
+
+@pytest_asyncio.fixture
+async def cache_repo(redis: Redis) -> AsyncGenerator[CacheRepository, None]:
+    yield CacheRepository(redis)
+
+
+@pytest.fixture(scope='function')
+async def cleanup_db(db_session: AsyncSession, cache_repo: CacheRepository) -> AsyncGenerator[None, None]:
+    await db_session.execute(delete(Menu))
+    await cache_repo.delete_all()
+    yield

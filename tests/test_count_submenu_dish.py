@@ -17,7 +17,8 @@ class TestCountSubmenuDishAPI:
     async def test_create_menu_then_menu_created(
             self,
             client: AsyncClient,
-            menu_repo: MenuRepository
+            menu_repo: MenuRepository,
+            cleanup_db: None,
     ) -> None:
         """Тест создает меню и ожидает успех."""
         data = {'title': 'menu 1', 'description': 'description 1'}

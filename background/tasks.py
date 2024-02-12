@@ -8,6 +8,7 @@ from sqlalchemy import delete
 from app.database import async_session_maker, get_redis_connection
 from app.models import Dish, Menu, Submenu
 from app.repositories.cache_repository import CacheRepository
+from app.services.dish_service import validate_price
 from background.celery_app import celery_app
 from background.sheet_parser import parse_sheet
 
@@ -52,7 +53,7 @@ def update_menu_from_sheet():
                                     submenu_id=submenu_id,
                                     title=dish.title,
                                     description=dish.description,
-                                    price=dish.price,  # TODO: VALIDATE
+                                    price=validate_price(dish.price),
                                 )
                             )
                 await cache_repository.delete_all()

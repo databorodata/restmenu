@@ -31,9 +31,10 @@ def parse_sheet(data: list[Any]) -> list[BatchCreateMenuModel]:
             current_row += 1
             dishes = []
             while current_row < len(data) and get_int(data[current_row][current_col]):
+                price = data[current_row][current_col + 3].replace(',', '.')
                 dish_data = CreateEditDishModel(title=data[current_row][current_col + 1],
                                                 description=data[current_row][current_col + 2],
-                                                price=data[current_row][current_col + 3])
+                                                price=price)
                 dishes.append(dish_data)
                 current_row += 1
 

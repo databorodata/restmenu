@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Menu
+from app.repositories.cache_repository import CacheRepository
 from app.repositories.menu_repository import MenuRepository
 from tests.utils import reverse
 
@@ -15,7 +16,7 @@ class TestMenuAPI:
     async def create_menu_fixture(
             self,
             client: AsyncClient,
-            menu_repo: MenuRepository
+            menu_repo: MenuRepository,
     ) -> AsyncGenerator[Menu, None]:
         """Фикстура для создания меню для тестирования."""
         new_menu = await menu_repo.create_menu({
@@ -23,12 +24,14 @@ class TestMenuAPI:
             'description': 'description 1',
             'id': uuid.uuid4()
         })
+
         yield new_menu
 
     async def test_when_create_menu_then_success(
             self,
             client: AsyncClient,
-            menu_repo: MenuRepository
+            menu_repo: MenuRepository,
+            cache_repo: CacheRepository,
     ) -> None:
         """Тест создает меню и ожидает успех."""
         data = {'title': 'menu 1', 'description': 'description 1'}
