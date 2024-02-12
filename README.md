@@ -74,10 +74,13 @@ Python 3.10, PostgreSQL
    docker-compose -f docker-compose-tests.yml up
    ```
 
-## Доступ к google sheet открыт для редактирования по ссылке:
+### Доступ к google sheet открыт для редактирования по ссылке:
 
 https://docs.google.com/spreadsheets/d/1aSWKJa9XeNGBfrtz2vdyuVKSW-y7XpkaZzkeIZpuG_8/edit#gid=1285963425
 
+### Задание "Добавить эндпоинт (GET) для вывода всех меню со всеми связанными подменю и со всеми связанными блюдами". Реализовано здесь:
+
+https://github.com/databorodata/restmenu/blob/celery_rabbit/app/routers/router_full_menu.py#L23
 
 ## Задания со звёздочкой
 
