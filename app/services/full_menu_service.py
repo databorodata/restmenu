@@ -1,11 +1,16 @@
 from typing import Sequence
 
 from app.models import Dish, Menu, Submenu
+from app.repositories.cache_repository import CacheRepository
 from app.repositories.menu_repository import MenuRepository
 from app.schemas import DishModel, FullMenuModel, FullSubmenuModel
+from app.services.dish_service import calculate_price
 
 
-def convert_full_data(raw_results: Sequence[tuple[Menu, Submenu, Dish]]) -> list[FullMenuModel]:
+async def convert_full_data(
+        cache_repository: CacheRepository,
+        raw_results: Sequence[tuple[Menu, Submenu, Dish]]
+) -> list[FullMenuModel]:
     menus = {}
     submenus = {}
 
@@ -31,11 +36,12 @@ def convert_full_data(raw_results: Sequence[tuple[Menu, Submenu, Dish]]) -> list
             submenu = submenus[submenu_data.id]
 
             if dish_data:
+                dish_discount = await cache_repository.get(f'{str(dish_data.id)}_discount')
                 dish_model = DishModel(
                     id=dish_data.id,
                     title=dish_data.title,
                     description=dish_data.description,
-                    price=dish_data.price
+                    price=calculate_price(dish_data.price, dish_discount)
                 )
                 submenu.dishes.append(dish_model)
 
@@ -43,10 +49,11 @@ def convert_full_data(raw_results: Sequence[tuple[Menu, Submenu, Dish]]) -> list
 
 
 class FullMenuService:
-    def __init__(self, menu_repository: MenuRepository) -> None:
+    def __init__(self, menu_repository: MenuRepository, cache_repository: CacheRepository) -> None:
         """Инициализация сервиса для работы с меню."""
         self.menu_repository = menu_repository
+        self.cache_repository = cache_repository
 
     async def get_full_menus(self) -> list[FullMenuModel]:
         results = await self.menu_repository.get_full_menus()
-        return convert_full_data(results)
+        return await convert_full_data(self.cache_repository, results)

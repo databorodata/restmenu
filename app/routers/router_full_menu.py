@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_async_session
+from app.database import get_async_session, get_redis_connection
+from app.repositories.cache_repository import CacheRepository
 from app.repositories.menu_repository import MenuRepository
 from app.schemas import FullMenuModel
 from app.services.full_menu_service import FullMenuService
@@ -13,11 +14,13 @@ router = APIRouter(
 
 
 def get_full_menu_service(
-        session: AsyncSession = Depends(get_async_session)
+        session: AsyncSession = Depends(get_async_session),
+        redis=Depends(get_redis_connection)
 ) -> FullMenuService:
     """Предоставляет сервис для работы с меню."""
     menu_repository = MenuRepository(session=session)
-    return FullMenuService(menu_repository=menu_repository)
+    cache_repository = CacheRepository(redis)
+    return FullMenuService(menu_repository=menu_repository, cache_repository=cache_repository)
 
 
 @router.get(

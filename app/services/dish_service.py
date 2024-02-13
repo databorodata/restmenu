@@ -50,7 +50,28 @@ def validate_price(price: str) -> str:
         price_float = float(price)
     except ValueError:
         raise HTTPException(status_code=400, detail='price type is not correct')
-    return f'{price_float:.2f}'
+    return normalize_price(price_float)
+
+
+def normalize_price(price: float) -> str:
+    return f'{price:.2f}'
+
+
+def try_parse_discount(discount: str | None) -> float:
+    if not discount:
+        return 0
+    try:
+        return float(discount)
+    except ValueError:
+        return 0
+
+
+def calculate_price(price: str, discount: str | None) -> str:
+    price_float = float(price)
+    discount_float = try_parse_discount(discount)
+    return normalize_price(
+        max(0.0, (100.0 - discount_float) / 100.0 * price_float)
+    )
 
 
 class DishService:
@@ -76,15 +97,17 @@ class DishService:
             return json.loads(cached_dishes)
 
         dishes_data = await self.dish_repository.get_all_dishes_for_submenu(submenu_id)
-        dishes_list: list[DishDict] = [
-            {
-                'id': str(dish.id),
-                'title': dish.title,
-                'description': dish.description,
-                'price': dish.price
-            }
-            for dish in dishes_data
-        ]
+        dishes_list: list[DishDict] = []
+        for dish in dishes_data:
+            dish_discount = await self.cache_repository.get(f'{str(dish.id)}_discount')
+            dishes_list.append(
+                {
+                    'id': str(dish.id),
+                    'title': dish.title,
+                    'description': dish.description,
+                    'price': calculate_price(dish.price, dish_discount),
+                }
+            )
         await self.cache_repository.set(cache_key, json.dumps(dishes_list), expire=60)
         return dishes_list
 
@@ -105,11 +128,12 @@ class DishService:
         if dish_data is None:
             raise HTTPException(status_code=404, detail='dish not found')
 
+        dish_discount = await self.cache_repository.get(f'{str(dish_id)}_discount')
         dish: DishDict = {
             'id': str(dish_data.id),
             'title': dish_data.title,
             'description': dish_data.description,
-            'price': dish_data.price
+            'price': calculate_price(dish_data.price, dish_discount),
         }
         await self.cache_repository.set(cache_key, json.dumps(dish), expire=60)
         return dish
@@ -158,11 +182,12 @@ class DishService:
         if updated_dish is None:
             raise HTTPException(status_code=404, detail='dish not found')
 
+        dish_discount = await self.cache_repository.get(f'{str(dish_id)}_discount')
         new_dish_data: DishDict = {
             'id': str(updated_dish.id),
             'title': updated_dish.title,
             'description': updated_dish.description,
-            'price': updated_dish.price
+            'price': calculate_price(updated_dish.price, dish_discount)
         }
         await self.cache_repository.set(
             f'menu:{menu_id}/submenu:{submenu_id}/dish:{dish_id}',

@@ -1,7 +1,10 @@
 from typing import Any
 
-from app.schemas import CreateEditDishModel
-from background.batch_models import BatchCreateMenuModel, BatchCreateSubmenuModel
+from background.batch_models import (
+    AddDiscountDishModel,
+    BatchCreateMenuModel,
+    BatchCreateSubmenuModel,
+)
 
 
 def get_int(cell):
@@ -33,9 +36,15 @@ def parse_sheet(data: list[Any]) -> list[BatchCreateMenuModel]:
             dishes = []
             while current_row < len(data) and get_int(data[current_row][current_col]):
                 price = data[current_row][current_col + 3].replace(',', '.')
-                dish_data = CreateEditDishModel(title=data[current_row][current_col + 1],
-                                                description=data[current_row][current_col + 2],
-                                                price=price)
+                discount = data[current_row][current_col + 4]
+                if discount:
+                    discount = discount.replace(',', '.')
+                dish_data = AddDiscountDishModel(
+                    title=data[current_row][current_col + 1],
+                    description=data[current_row][current_col + 2],
+                    price=price,
+                    discount=discount,
+                )
                 dishes.append(dish_data)
                 current_row += 1
 

@@ -34,6 +34,7 @@ def update_menu_from_sheet():
             async with session.begin():
                 await session.execute(delete(Menu))
 
+                discount_dishes = {}
                 for menu in menus:
                     menu_id = uuid.uuid4()
                     session.add(Menu(id=menu_id, title=menu.title, description=menu.description))
@@ -48,9 +49,13 @@ def update_menu_from_sheet():
                             )
                         )
                         for dish in submenu.dishes:
+                            dish_id = uuid.uuid4()
+                            if dish.discount:
+                                discount_dishes[dish_id] = dish.discount
+
                             session.add(
                                 Dish(
-                                    id=uuid.uuid4(),
+                                    id=dish_id,
                                     menu_id=menu_id,
                                     submenu_id=submenu_id,
                                     title=dish.title,
@@ -59,6 +64,8 @@ def update_menu_from_sheet():
                                 )
                             )
                 await cache_repository.delete_all()
+                for dish_id, discount in discount_dishes.items():
+                    await cache_repository.set(f'{str(dish_id)}_discount', discount, expire=15)
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(update_db())
