@@ -1,9 +1,9 @@
 import asyncio
-import uuid
 
 import gspread
 from google.oauth2.service_account import Credentials
 from sqlalchemy import delete
+from sqlalchemy.dialects.postgresql import insert
 
 from app.database import async_session_maker, get_redis_connection
 from app.models import Dish, Menu, Submenu
@@ -32,37 +32,57 @@ def update_menu_from_sheet():
 
         async with async_session_maker() as session:
             async with session.begin():
-                await session.execute(delete(Menu))
-
                 discount_dishes = {}
+                updated_menus = []
+                updated_submenus = []
+                updated_dishes = []
                 for menu in menus:
-                    menu_id = uuid.uuid4()
-                    session.add(Menu(id=menu_id, title=menu.title, description=menu.description))
-                    for submenu in menu.submenus:
-                        submenu_id = uuid.uuid4()
-                        session.add(
-                            Submenu(
-                                id=submenu_id,
-                                menu_id=menu_id,
-                                title=submenu.title,
-                                description=submenu.description,
-                            )
-                        )
-                        for dish in submenu.dishes:
-                            dish_id = uuid.uuid4()
-                            if dish.discount:
-                                discount_dishes[dish_id] = dish.discount
+                    updated_menus.append(menu.id)
+                    stmt = insert(Menu).values(
+                        id=menu.id,
+                        title=menu.title,
+                        description=menu.description
+                    ).on_conflict_do_update(
+                        index_elements=['id'],
+                        set_=dict(title=menu.title, description=menu.description)
+                    )
+                    await session.execute(stmt)
 
-                            session.add(
-                                Dish(
-                                    id=dish_id,
-                                    menu_id=menu_id,
-                                    submenu_id=submenu_id,
-                                    title=dish.title,
-                                    description=dish.description,
-                                    price=validate_price(dish.price),
-                                )
+                    for submenu in menu.submenus:
+                        updated_submenus.append(submenu.id)
+                        stmt = insert(Submenu).values(
+                            id=submenu.id,
+                            menu_id=menu.id,
+                            title=submenu.title,
+                            description=submenu.description
+                        ).on_conflict_do_update(
+                            index_elements=['id'],
+                            set_=dict(menu_id=menu.id, title=submenu.title, description=submenu.description)
+                        )
+                        await session.execute(stmt)
+
+                        for dish in submenu.dishes:
+                            updated_dishes.append(dish.id)
+                            if dish.discount:
+                                discount_dishes[dish.id] = dish.discount
+
+                            stmt = insert(Dish).values(
+                                id=dish.id,
+                                submenu_id=submenu.id,
+                                title=dish.title,
+                                description=dish.description,
+                                price=validate_price(dish.price)
+                            ).on_conflict_do_update(
+                                index_elements=['id'],
+                                set_=dict(submenu_id=submenu.id, title=dish.title, description=dish.description,
+                                          price=validate_price(dish.price))
                             )
+                            await session.execute(stmt)
+
+                await session.execute(delete(Dish).where(Dish.id.notin_(updated_dishes)))
+                await session.execute(delete(Submenu).where(Submenu.id.notin_(updated_submenus)))
+                await session.execute(delete(Menu).where(Menu.id.notin_(updated_menus)))
+
                 await cache_repository.delete_all()
                 for dish_id, discount in discount_dishes.items():
                     await cache_repository.set(f'{str(dish_id)}_discount', discount, expire=15)
