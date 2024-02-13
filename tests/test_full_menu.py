@@ -41,7 +41,6 @@ class TestFullMenuAPI:
             'title': 'пиво',
             'description': 'пиво светлое',
             'price': '80.50',
-            'menu_id': new_menu1.id,
             'submenu_id': new_submenu1_1.id,
             'id': uuid.uuid4()
         })
@@ -50,7 +49,6 @@ class TestFullMenuAPI:
             'title': 'пиво',
             'description': 'пиво тёмное',
             'price': '86.50',
-            'menu_id': new_menu1.id,
             'submenu_id': new_submenu1_1.id,
             'id': uuid.uuid4()
         })
@@ -66,7 +64,6 @@ class TestFullMenuAPI:
             'title': 'виски отечественный',
             'description': 'не дорогой, крепкий, опасный',
             'price': '90.50',
-            'menu_id': new_menu1.id,
             'submenu_id': new_submenu1_2.id,
             'id': uuid.uuid4()
         })
@@ -75,7 +72,6 @@ class TestFullMenuAPI:
             'title': 'виски Шотландский',
             'description': 'дорогой и крепкий',
             'price': '480.00',
-            'menu_id': new_menu1.id,
             'submenu_id': new_submenu1_2.id,
             'id': uuid.uuid4()
         })

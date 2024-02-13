@@ -13,7 +13,6 @@ class Menu(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
     submenus = relationship('Submenu', back_populates='menu', cascade='all, delete')
-    dishes = relationship('Dish', back_populates='menu', cascade='all, delete')
 
 
 class Submenu(Base):
@@ -34,5 +33,3 @@ class Dish(Base):
     price = Column(String, nullable=False)
     submenu_id = Column(UUID(as_uuid=True), ForeignKey('submenu.id', ondelete='CASCADE'))
     submenu = relationship('Submenu', back_populates='dishes')
-    menu_id = Column(UUID(as_uuid=True), ForeignKey('menu.id', ondelete='CASCADE'))
-    menu = relationship('Menu', back_populates='dishes')

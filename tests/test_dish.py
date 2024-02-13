@@ -40,7 +40,6 @@ class TestDishAPI:
             'title': 'Test Submenu',
             'description': 'Test Submenu Description',
             'price': '42.42',
-            'menu_id': new_menu.id,
             'submenu_id': new_submenu.id,
             'id': uuid.uuid4()
         })

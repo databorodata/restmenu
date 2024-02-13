@@ -147,7 +147,7 @@ class DishService:
     ) -> DishDict:
         """Создает новое блюдо и обновляет кэш."""
         dish_data['price'] = validate_price(dish_data['price'])
-        new_dish = await self.dish_repository.create_dish({**dish_data, 'menu_id': menu_id, 'submenu_id': submenu_id})
+        new_dish = await self.dish_repository.create_dish({**dish_data, 'submenu_id': submenu_id})
         dish_cache_data = {
             'id': str(new_dish.id),
             'title': new_dish.title,
